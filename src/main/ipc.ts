@@ -5,26 +5,15 @@ import {
   createManagedFile,
   deleteManagedFile,
   listManagedFiles,
+  managedFilePath,
   renameManagedFile,
   type ManagedKind
 } from './config/managedFiles'
 import { deleteCredential, listCredentials, updateCredentialKey } from './auth/io'
 import { validateConfig } from './schema/validate'
+import { IPC } from '../shared/ipc-channels'
 
-export const IPC = {
-  configRead: 'config:read',
-  configSave: 'config:save',
-  configPath: 'config:path',
-  configRaw: 'config:raw',
-  authList: 'auth:list',
-  authUpdateKey: 'auth:updateKey',
-  authDelete: 'auth:delete',
-  filesList: 'files:list',
-  filesCreate: 'files:create',
-  filesRename: 'files:rename',
-  filesDelete: 'files:delete',
-  filesOpen: 'files:open'
-} as const
+export { IPC }
 
 type IpcLike = { handle: (channel: string, fn: (...args: unknown[]) => unknown) => void }
 type Deps = {
@@ -49,7 +38,9 @@ export function registerIpc(ipc: IpcLike, paths: ConfigPaths, deps: Deps = defau
 
   on(IPC.configRead, () => {
     try {
-      return ok(deps.readConfig(paths.configFile))
+      const result = deps.readConfig(paths.configFile)
+      if (result.parseError) return { ok: false, error: result.parseError, data: result.data }
+      return ok(result.data)
     } catch (error) {
       return fail(error)
     }
@@ -129,8 +120,14 @@ export function registerIpc(ipc: IpcLike, paths: ConfigPaths, deps: Deps = defau
       return fail(error)
     }
   })
-  on(IPC.filesOpen, (path: string) => {
-    shell.openPath(path)
-    return ok(null)
+  on(IPC.filesOpen, async (kind: ManagedKind, name: string) => {
+    try {
+      const target = managedFilePath(paths.configDir, kind, name)
+      const message = await shell.openPath(target)
+      if (message) return fail(new Error(message))
+      return ok(null)
+    } catch (error) {
+      return fail(error)
+    }
   })
 }

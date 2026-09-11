@@ -7,6 +7,7 @@ import {
   deleteManagedFile,
   listManagedFiles,
   managedDirFor,
+  managedFilePath,
   renameManagedFile
 } from './managedFiles'
 
@@ -26,6 +27,20 @@ describe('managedFiles', () => {
     expect(managedDirFor('/cfg', 'agent')).toBe('/cfg/agent')
     expect(managedDirFor('/cfg', 'command')).toBe('/cfg/command')
     expect(managedDirFor('/cfg', 'skill')).toBe('/cfg/skill')
+  })
+
+  it('rejects unsafe kinds to prevent path traversal', () => {
+    const dir = tmpDir()
+    for (const kind of ['../../..', 'agents', 'agent/../../', '', '..']) {
+      expect(() => managedDirFor(dir, kind as 'agent')).toThrow('非法的类型')
+    }
+  })
+
+  it('rejects unsafe names in managedFilePath', () => {
+    const dir = tmpDir()
+    expect(managedFilePath(dir, 'command', 'deploy')).toBe(join(dir, 'command', 'deploy.md'))
+    expect(managedFilePath(dir, 'skill', 'my-skill')).toBe(join(dir, 'skill', 'my-skill'))
+    expect(() => managedFilePath(dir, 'command', '../evil')).toThrow('非法的名称')
   })
 
   it('creates, lists, renames and deletes a command file', () => {

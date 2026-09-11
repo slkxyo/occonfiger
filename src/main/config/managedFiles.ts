@@ -12,14 +12,29 @@ import { join } from 'node:path'
 export type ManagedKind = 'agent' | 'command' | 'skill'
 export type ManagedFile = { name: string; path: string }
 
+const MANAGED_KINDS = ['agent', 'command', 'skill'] as const
+
 function assertSafeName(name: string): void {
   if (name === '' || name === '.' || name === '..' || name.includes('/') || name.includes('\\')) {
     throw new Error(`非法的名称：${JSON.stringify(name)}`)
   }
 }
 
+function assertManagedKind(kind: unknown): asserts kind is ManagedKind {
+  if (typeof kind !== 'string' || !(MANAGED_KINDS as readonly string[]).includes(kind)) {
+    throw new Error(`非法的类型：${JSON.stringify(kind)}`)
+  }
+}
+
 export function managedDirFor(configDir: string, kind: ManagedKind): string {
+  assertManagedKind(kind)
   return join(configDir, kind)
+}
+
+export function managedFilePath(configDir: string, kind: ManagedKind, name: string): string {
+  assertSafeName(name)
+  const base = managedDirFor(configDir, kind)
+  return kind === 'skill' ? join(base, name) : join(base, `${name}.md`)
 }
 
 export function listManagedFiles(dir: string, kind: ManagedKind): ManagedFile[] {
@@ -73,8 +88,6 @@ export function renameManagedFile(dir: string, kind: ManagedKind, from: string, 
 }
 
 export function deleteManagedFile(dir: string, kind: ManagedKind, name: string): void {
-  assertSafeName(name)
-  const base = managedDirFor(dir, kind)
-  const target = kind === 'skill' ? join(base, name) : join(base, `${name}.md`)
+  const target = managedFilePath(dir, kind, name)
   rmSync(target, { recursive: kind === 'skill', force: true })
 }
