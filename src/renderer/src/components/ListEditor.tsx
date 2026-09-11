@@ -34,8 +34,12 @@ export function ListEditor(props: {
           size="sm"
           colorPalette="accent"
           onClick={() => {
-            if (!name.trim()) return
-            setField([...props.path, name.trim()], {})
+            const trimmed = name.trim()
+            if (!trimmed || keys.includes(trimmed)) {
+              setName('')
+              return
+            }
+            setField([...props.path, trimmed], {})
             setName('')
           }}
         >
