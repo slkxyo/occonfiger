@@ -64,6 +64,39 @@ describe('McpPage', () => {
     })
   })
 
+  it('keeps an oauth object untouched and hides the switch', () => {
+    useConfigStore.getState().loadConfig({
+      mcp: { exa: { type: 'remote', url: 'https://x', oauth: { clientId: 'abc' } } }
+    })
+    render(
+      <Provider>
+        <McpPage />
+      </Provider>
+    )
+    expect(screen.queryByRole('checkbox', { name: 'OAuth' })).not.toBeInTheDocument()
+    expect(screen.getByText('当前为 OAuth 对象配置，暂不支持可视化编辑')).toBeInTheDocument()
+    expect(useConfigStore.getState().draft.mcp).toEqual({
+      exa: { type: 'remote', url: 'https://x', oauth: { clientId: 'abc' } }
+    })
+  })
+
+  it('toggles oauth when the value is false', async () => {
+    useConfigStore.getState().loadConfig({
+      mcp: { exa: { type: 'remote', url: 'https://x', oauth: false } }
+    })
+    render(
+      <Provider>
+        <McpPage />
+      </Provider>
+    )
+    const oauth = screen.getByRole('checkbox', { name: 'OAuth' })
+    expect(oauth).not.toBeChecked()
+    await userEvent.click(oauth)
+    expect(useConfigStore.getState().draft.mcp).toEqual({
+      exa: { type: 'remote', url: 'https://x', oauth: true }
+    })
+  })
+
   it('initializes a new server with local type', async () => {
     useConfigStore.getState().loadConfig({})
     render(

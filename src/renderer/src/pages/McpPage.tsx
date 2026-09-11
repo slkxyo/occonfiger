@@ -1,7 +1,13 @@
 import { Section } from '../components/Section'
 import { ListEditor } from '../components/ListEditor'
 import { KeyValueEditor } from '../components/KeyValueEditor'
-import { SelectField, SwitchField, TagsField, TextField } from '../fields/controls'
+import {
+  BoolOrObjectField,
+  SelectField,
+  SwitchField,
+  TagsField,
+  TextField
+} from '../fields/controls'
 import { useField } from '../fields/useField'
 
 function McpCard({ server }: { server: string }): React.JSX.Element {
@@ -26,10 +32,11 @@ function McpCard({ server }: { server: string }): React.JSX.Element {
         <>
           <TextField path={['mcp', server, 'url']} label="URL" />
           <KeyValueEditor path={['mcp', server, 'headers']} label="请求头" valueLabel="值" />
-          <SwitchField
+          <BoolOrObjectField
             path={['mcp', server, 'oauth']}
             label="OAuth"
             description="关闭时写入 false，禁用 OAuth 自动检测。"
+            objectHint="当前为 OAuth 对象配置，暂不支持可视化编辑"
           />
         </>
       )}
