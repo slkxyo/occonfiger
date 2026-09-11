@@ -21,4 +21,18 @@ describe('App', () => {
     expect(await screen.findByText('/home/u/.config/opencode/opencode.jsonc')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '常规' })).toBeInTheDocument()
   })
+
+  it('shows an alert when startup loading fails', async () => {
+    vi.stubGlobal('api', {
+      ...api,
+      readConfig: vi.fn().mockRejectedValue(new Error('磁盘不可读')),
+      getConfigPath: vi.fn().mockResolvedValue('/home/u/.config/opencode/opencode.jsonc')
+    })
+    render(
+      <Provider>
+        <App />
+      </Provider>
+    )
+    expect(await screen.findByRole('alert')).toHaveTextContent('磁盘不可读')
+  })
 })

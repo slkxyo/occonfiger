@@ -21,15 +21,21 @@ const NAV = [
 export function App(): React.JSX.Element {
   const [active, setActive] = useState('general')
   const [configPath, setConfigPath] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const draft = useConfigStore((s) => s.draft)
   const dirty = useConfigStore((s) => s.dirty)
   const loadConfig = useConfigStore((s) => s.loadConfig)
 
   useEffect(() => {
-    Promise.all([window.api.readConfig(), window.api.getConfigPath()]).then(([config, path]) => {
-      loadConfig(config)
-      setConfigPath(path)
-    })
+    Promise.all([window.api.readConfig(), window.api.getConfigPath()])
+      .then(([config, path]) => {
+        loadConfig(config)
+        setConfigPath(path)
+        setError(null)
+      })
+      .catch((cause: unknown) => {
+        setError(cause instanceof Error ? cause.message : String(cause))
+      })
   }, [loadConfig])
 
   return (
@@ -40,6 +46,20 @@ export function App(): React.JSX.Element {
       configPath={configPath}
       dirty={dirty}
     >
+      {error ? (
+        <Box
+          role="alert"
+          mb="16px"
+          p="12px 16px"
+          borderWidth="1px"
+          borderColor="error"
+          borderRadius="control"
+          color="error"
+          bg="bg.subtle"
+        >
+          <Text fontSize="sm">配置读取失败：{error}</Text>
+        </Box>
+      ) : null}
       <Box>
         <Text fontSize="sm" color="fg.muted">
           当前页：{active}，字段数：{Object.keys(draft).length}
