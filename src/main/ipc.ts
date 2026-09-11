@@ -47,9 +47,21 @@ export function registerIpc(ipc: IpcLike, paths: ConfigPaths, deps: Deps = defau
   const on = <A extends unknown[]>(channel: string, fn: (...args: A) => unknown): void =>
     ipc.handle(channel, (...args: unknown[]) => fn(...(args.slice(1) as A)))
 
-  on(IPC.configRead, () => ok(deps.readConfig(paths.configFile)))
+  on(IPC.configRead, () => {
+    try {
+      return ok(deps.readConfig(paths.configFile))
+    } catch (error) {
+      return fail(error)
+    }
+  })
   on(IPC.configPath, () => ok(paths.configFile))
-  on(IPC.configRaw, () => ok(deps.readRaw(paths.configFile)))
+  on(IPC.configRaw, () => {
+    try {
+      return ok(deps.readRaw(paths.configFile))
+    } catch (error) {
+      return fail(error)
+    }
+  })
   on(IPC.configSave, (data: unknown, force?: boolean) => {
     try {
       const validation = validateConfig(data)
@@ -63,7 +75,13 @@ export function registerIpc(ipc: IpcLike, paths: ConfigPaths, deps: Deps = defau
     }
   })
 
-  on(IPC.authList, () => ok(listCredentials(paths.authFile)))
+  on(IPC.authList, () => {
+    try {
+      return ok(listCredentials(paths.authFile))
+    } catch (error) {
+      return fail(error)
+    }
+  })
   on(IPC.authUpdateKey, (provider: string, key: string) => {
     try {
       updateCredentialKey(paths.authFile, provider, key)
@@ -81,7 +99,13 @@ export function registerIpc(ipc: IpcLike, paths: ConfigPaths, deps: Deps = defau
     }
   })
 
-  on(IPC.filesList, (kind: ManagedKind) => ok(listManagedFiles(paths.configDir, kind)))
+  on(IPC.filesList, (kind: ManagedKind) => {
+    try {
+      return ok(listManagedFiles(paths.configDir, kind))
+    } catch (error) {
+      return fail(error)
+    }
+  })
   on(IPC.filesCreate, (kind: ManagedKind, name: string) => {
     try {
       return ok(createManagedFile(paths.configDir, kind, name))

@@ -41,16 +41,51 @@ describe('registerIpc', () => {
     expect(result).toEqual({ ok: true, data: '/cfg/opencode.json' })
   })
 
-  it('reports save validation errors but still saves when forced', async () => {
+  it('rejects invalid config when not forced and does not save', async () => {
     const ipc = fakeIpc()
     const saved: unknown[] = []
     registerIpc(ipc, paths, {
-      writeConfig: (_file, data) => saved.push(data),
+      writeConfig: (_file, data) => {
+        saved.push(data)
+      },
+      readConfig: () => ({}),
+      readRaw: () => null
+    })
+    const result = (await ipc.invoke(IPC.configSave, { totally_unknown: 1 }, false)) as {
+      ok: boolean
+      error?: string
+    }
+    expect(result.ok).toBe(false)
+    expect(result.error).toBeDefined()
+    expect(saved).toHaveLength(0)
+  })
+
+  it('still saves when validation fails but is forced', async () => {
+    const ipc = fakeIpc()
+    const saved: unknown[] = []
+    registerIpc(ipc, paths, {
+      writeConfig: (_file, data) => {
+        saved.push(data)
+      },
       readConfig: () => ({}),
       readRaw: () => null
     })
     const result = (await ipc.invoke(IPC.configSave, { bad: 1 }, true)) as { ok: boolean }
     expect(result.ok).toBe(true)
     expect(saved).toHaveLength(1)
+  })
+
+  it('returns error result when a read handler throws', async () => {
+    const ipc = fakeIpc()
+    registerIpc(ipc, paths, {
+      readConfig: () => {
+        throw new Error('boom')
+      },
+      writeConfig: () => undefined,
+      readRaw: () => null
+    })
+    const result = (await ipc.invoke(IPC.configRead)) as { ok: boolean; error?: string }
+    expect(result.ok).toBe(false)
+    expect(result.error).toBe('boom')
   })
 })
