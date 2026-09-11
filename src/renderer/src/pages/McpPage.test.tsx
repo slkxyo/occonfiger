@@ -46,21 +46,21 @@ describe('McpPage', () => {
     expect(screen.getByLabelText('请求头 值 X-Token')).toHaveValue('abc')
   })
 
-  it('toggles oauth for a remote server and writes false when disabled', async () => {
+  it('writes false when disabling auto-detection and removes the key when re-enabled', async () => {
     render(
       <Provider>
         <McpPage />
       </Provider>
     )
-    const oauth = screen.getByRole('checkbox', { name: 'OAuth' })
+    const oauth = screen.getByRole('checkbox', { name: '禁用自动检测' })
     expect(oauth).not.toBeChecked()
     await userEvent.click(oauth)
     expect(useConfigStore.getState().draft.mcp).toEqual({
-      exa: { type: 'remote', url: 'https://x', oauth: true }
+      exa: { type: 'remote', url: 'https://x', oauth: false }
     })
     await userEvent.click(oauth)
     expect(useConfigStore.getState().draft.mcp).toEqual({
-      exa: { type: 'remote', url: 'https://x', oauth: false }
+      exa: { type: 'remote', url: 'https://x' }
     })
   })
 
@@ -73,14 +73,14 @@ describe('McpPage', () => {
         <McpPage />
       </Provider>
     )
-    expect(screen.queryByRole('checkbox', { name: 'OAuth' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('checkbox', { name: '禁用自动检测' })).not.toBeInTheDocument()
     expect(screen.getByText('当前为 OAuth 对象配置，暂不支持可视化编辑')).toBeInTheDocument()
     expect(useConfigStore.getState().draft.mcp).toEqual({
       exa: { type: 'remote', url: 'https://x', oauth: { clientId: 'abc' } }
     })
   })
 
-  it('toggles oauth when the value is false', async () => {
+  it('shows the switch checked when oauth is false and removes the key when unchecked', async () => {
     useConfigStore.getState().loadConfig({
       mcp: { exa: { type: 'remote', url: 'https://x', oauth: false } }
     })
@@ -89,11 +89,11 @@ describe('McpPage', () => {
         <McpPage />
       </Provider>
     )
-    const oauth = screen.getByRole('checkbox', { name: 'OAuth' })
-    expect(oauth).not.toBeChecked()
+    const oauth = screen.getByRole('checkbox', { name: '禁用自动检测' })
+    expect(oauth).toBeChecked()
     await userEvent.click(oauth)
     expect(useConfigStore.getState().draft.mcp).toEqual({
-      exa: { type: 'remote', url: 'https://x', oauth: true }
+      exa: { type: 'remote', url: 'https://x' }
     })
   })
 

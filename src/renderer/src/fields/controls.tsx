@@ -137,6 +137,36 @@ export function BoolOrObjectField(props: {
   )
 }
 
+export function OAuthField(props: {
+  path: string[]
+  label: string
+  description?: string
+  objectHint?: string
+}): React.JSX.Element {
+  const { value, set, clear } = useField(props.path)
+  if (typeof value === 'object' && value !== null) {
+    return (
+      <Field label={props.label} description={props.description}>
+        <Text fontSize="sm" color="fg.muted">
+          {props.objectHint ?? '当前为对象配置，暂不支持可视化编辑'}
+        </Text>
+      </Field>
+    )
+  }
+  return (
+    <Field label={props.label} description={props.description}>
+      <Switch.Root
+        checked={value === false}
+        onCheckedChange={(e) => (e.checked ? set(false) : clear())}
+      >
+        <Switch.HiddenInput aria-label="禁用自动检测" />
+        <Switch.Control />
+        <Switch.Label>禁用自动检测</Switch.Label>
+      </Switch.Root>
+    </Field>
+  )
+}
+
 export function SelectField(props: {
   path: string[]
   label: string
