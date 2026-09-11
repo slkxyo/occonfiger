@@ -39,6 +39,34 @@ export function TextField(props: {
   )
 }
 
+export function ValidatedTextField(props: {
+  path: string[]
+  label: string
+  description?: string
+  placeholder?: string
+  validate: (value: string) => string | null
+}): React.JSX.Element {
+  const { value, set } = useField(props.path)
+  const text = asString(value)
+  const error = props.validate(text)
+  return (
+    <Field label={props.label} description={props.description}>
+      <Input
+        aria-label={props.label}
+        value={text}
+        placeholder={props.placeholder}
+        borderColor={error ? 'error' : undefined}
+        onChange={(e) => set(e.target.value)}
+      />
+      {error ? (
+        <Text role="alert" fontSize="xs" color="error" mt="4px">
+          {error}
+        </Text>
+      ) : null}
+    </Field>
+  )
+}
+
 export function NumberField(props: {
   path: string[]
   label: string

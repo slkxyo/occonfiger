@@ -1,9 +1,22 @@
 import { Section } from '../components/Section'
+import { validateProviderModel } from '../fields/validation'
 import { FieldsForm, type FieldSpec } from '../fields/FieldsForm'
 
 const specs: FieldSpec[] = [
-  { kind: 'text', path: ['model'], label: '主模型', placeholder: 'provider/model' },
-  { kind: 'text', path: ['small_model'], label: '小模型', placeholder: 'provider/model' }
+  {
+    kind: 'validated-text',
+    path: ['model'],
+    label: '主模型',
+    placeholder: 'provider/model',
+    validate: validateProviderModel
+  },
+  {
+    kind: 'validated-text',
+    path: ['small_model'],
+    label: '小模型',
+    placeholder: 'provider/model',
+    validate: validateProviderModel
+  }
 ]
 
 export function ModelPage(): React.JSX.Element {

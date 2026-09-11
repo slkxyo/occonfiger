@@ -3,7 +3,15 @@ import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Provider } from '../components/ui/provider'
 import { useConfigStore } from '../store/configStore'
-import { BoolOrObjectField, PluginField, TextField, TagsField, SwitchField } from './controls'
+import {
+  BoolOrObjectField,
+  PluginField,
+  TextField,
+  TagsField,
+  SwitchField,
+  ValidatedTextField
+} from './controls'
+import { validateAgentName, validateProviderModel } from './validation'
 
 function wrap(ui: React.ReactElement): ReturnType<typeof render> {
   return render(<Provider>{ui}</Provider>)
@@ -67,5 +75,24 @@ describe('controls', () => {
     wrap(<BoolOrObjectField path={['formatter']} label="启用格式化" />)
     await userEvent.click(screen.getByRole('checkbox', { name: '启用格式化' }))
     expect(useConfigStore.getState().draft.formatter).toBe(true)
+  })
+
+  it('ValidatedTextField shows an inline error for a malformed provider/model', async () => {
+    wrap(<ValidatedTextField path={['model']} label="主模型" validate={validateProviderModel} />)
+    await userEvent.type(screen.getByLabelText('主模型'), 'invalid')
+    expect(screen.getByRole('alert')).toHaveTextContent('格式应为 provider/model')
+  })
+
+  it('ValidatedTextField accepts a valid provider/model without an error', async () => {
+    wrap(<ValidatedTextField path={['model']} label="主模型" validate={validateProviderModel} />)
+    await userEvent.type(screen.getByLabelText('主模型'), 'anthropic/claude')
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(useConfigStore.getState().draft.model).toBe('anthropic/claude')
+  })
+
+  it('validateAgentName allows a bare agent name but rejects whitespace', () => {
+    expect(validateAgentName('')).toBeNull()
+    expect(validateAgentName('build')).toBeNull()
+    expect(validateAgentName('a b')).not.toBeNull()
   })
 })
