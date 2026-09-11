@@ -1,34 +1,21 @@
 # occonfiger
 
-An Electron application with React and TypeScript
+opencode 全局配置的可视化编辑器。
 
-## Recommended IDE Setup
+## 功能
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+- 可视化编辑 `~/.config/opencode/opencode.json(c)` 全量字段
+- 管理 `/connect` 已连接的服务商凭证（改密钥 / 删除）
+- 管理 agent / command / skill 文件
+- 亮色 / 暗色 / 跟随系统主题
 
-## Project Setup
-
-### Install
-
-```bash
-$ pnpm install
-```
-
-### Development
+## 开发
 
 ```bash
-$ pnpm dev
-```
-
-### Build
-
-```bash
-# For windows
-$ pnpm build:win
-
-# For macOS
-$ pnpm build:mac
-
-# For Linux
-$ pnpm build:linux
+pnpm install
+pnpm dev
+pnpm test
+pnpm typecheck
+pnpm lint
+pnpm build
 ```

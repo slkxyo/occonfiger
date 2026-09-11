@@ -15,6 +15,8 @@ import { CommandPage } from './pages/CommandPage'
 import { SkillsPage } from './pages/SkillsPage'
 import { PluginsPage } from './pages/PluginsPage'
 import { AdvancedPage } from './pages/AdvancedPage'
+import { CredentialsPage } from './pages/CredentialsPage'
+import { FileManagerPage } from './pages/FileManagerPage'
 
 const NAV = [
   { id: 'general', label: '常规' },
@@ -42,7 +44,9 @@ function CurrentPage({ id }: { id: string }): React.JSX.Element {
   if (id === 'skills') return <SkillsPage />
   if (id === 'plugins') return <PluginsPage />
   if (id === 'advanced') return <AdvancedPage />
-  return <Text color="fg.muted">该页面将在 Plan 3 实现。</Text>
+  if (id === 'credentials') return <CredentialsPage />
+  if (id === 'files') return <FileManagerPage />
+  return <Text color="fg.muted">页面不存在。</Text>
 }
 
 export function App(): React.JSX.Element {

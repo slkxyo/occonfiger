@@ -62,6 +62,20 @@ describe('App', () => {
     expect(await screen.findByText('已强制保存，需重启 opencode 生效')).toBeInTheDocument()
   })
 
+  it('renders the credentials page when selected', async () => {
+    vi.stubGlobal('api', {
+      ...api,
+      listCredentials: vi.fn().mockResolvedValue([])
+    })
+    render(
+      <Provider>
+        <App />
+      </Provider>
+    )
+    await userEvent.click(screen.getByRole('button', { name: '服务商凭证' }))
+    expect(await screen.findByText(/尚无已连接的服务商/)).toBeInTheDocument()
+  })
+
   it('shows normalized JSON in the raw dialog', async () => {
     vi.stubGlobal('api', {
       ...api,
