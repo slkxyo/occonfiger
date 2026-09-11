@@ -50,14 +50,41 @@ describe('CredentialsPage', () => {
 
   it('deletes after confirmation', async () => {
     const api = stubApi()
-    vi.stubGlobal('confirm', vi.fn().mockReturnValue(true))
+    const confirm = vi.fn().mockReturnValue(true)
+    vi.stubGlobal('confirm', confirm)
     render(
       <Provider>
         <CredentialsPage />
       </Provider>
     )
     await userEvent.click(await screen.findByRole('button', { name: '删除 deepseek' }))
+    expect(confirm).toHaveBeenCalledWith('确定删除 deepseek 的凭证吗？')
     expect(api.deleteCredential).toHaveBeenCalledWith('deepseek')
+  })
+
+  it('does not delete when confirmation is cancelled', async () => {
+    const api = stubApi()
+    const confirm = vi.fn().mockReturnValue(false)
+    vi.stubGlobal('confirm', confirm)
+    render(
+      <Provider>
+        <CredentialsPage />
+      </Provider>
+    )
+    await userEvent.click(await screen.findByRole('button', { name: '删除 deepseek' }))
+    expect(confirm).toHaveBeenCalledWith('确定删除 deepseek 的凭证吗？')
+    expect(api.deleteCredential).not.toHaveBeenCalled()
+  })
+
+  it('shows an error when listing credentials fails', async () => {
+    stubApi({ listCredentials: vi.fn().mockRejectedValue(new Error('读取失败')) })
+    render(
+      <Provider>
+        <CredentialsPage />
+      </Provider>
+    )
+    expect(await screen.findByRole('alert')).toHaveTextContent('操作失败：读取失败')
+    expect(screen.queryByText(/尚无已连接的服务商/)).not.toBeInTheDocument()
   })
 
   it('shows empty state', async () => {
