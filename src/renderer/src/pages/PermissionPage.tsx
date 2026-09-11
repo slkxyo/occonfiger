@@ -1,4 +1,4 @@
-import { Box, HStack, IconButton, Input, Text } from '@chakra-ui/react'
+import { Box, Button, HStack, IconButton, Input, Text } from '@chakra-ui/react'
 import { Section } from '../components/Section'
 import { useField } from '../fields/useField'
 import { useConfigStore } from '../store/configStore'
@@ -10,7 +10,6 @@ export const PERMISSION_KEYS = [
   'glob',
   'grep',
   'list',
-  'bash',
   'task',
   'external_directory',
   'todowrite',
@@ -23,6 +22,16 @@ export const PERMISSION_KEYS = [
 ] as const
 
 const ACTIONS = ['', 'allow', 'ask', 'deny']
+const RULE_ACTIONS = ['allow', 'ask', 'deny']
+
+const SELECT_STYLE: React.CSSProperties = {
+  height: '32px',
+  borderRadius: '8px',
+  border: '1px solid var(--chakra-colors-border-default)',
+  background: 'var(--chakra-colors-bg-default)',
+  color: 'inherit',
+  padding: '0 8px'
+}
 
 function PermissionRow({ permKey }: { permKey: string }): React.JSX.Element {
   const { value, set, clear } = useField(['permission', permKey])
@@ -36,14 +45,7 @@ function PermissionRow({ permKey }: { permKey: string }): React.JSX.Element {
         aria-label={permKey}
         value={action}
         onChange={(e) => (e.target.value === '' ? clear() : set(e.target.value))}
-        style={{
-          height: '32px',
-          borderRadius: '8px',
-          border: '1px solid var(--chakra-colors-border-default)',
-          background: 'var(--chakra-colors-bg-default)',
-          color: 'inherit',
-          padding: '0 8px'
-        }}
+        style={SELECT_STYLE}
       >
         {ACTIONS.map((action) => (
           <option key={action || 'unset'} value={action}>
@@ -55,7 +57,42 @@ function PermissionRow({ permKey }: { permKey: string }): React.JSX.Element {
   )
 }
 
-function BashRules(): React.JSX.Element {
+function GlobalBashAction(): React.JSX.Element {
+  const { value, set, clear } = useField(['permission', 'bash'])
+  const setField = useConfigStore((s) => s.setField)
+  const action = typeof value === 'string' ? value : ''
+  return (
+    <Box mt="16px">
+      <HStack justify="space-between" mb="8px">
+        <Text fontSize="sm" fontWeight="medium">
+          bash 全局动作
+        </Text>
+        <Button
+          aria-label="改为规则模式"
+          size="sm"
+          variant="ghost"
+          onClick={() => setField(['permission', 'bash'], {})}
+        >
+          改为规则模式
+        </Button>
+      </HStack>
+      <select
+        aria-label="bash 全局动作"
+        value={action}
+        onChange={(e) => (e.target.value === '' ? clear() : set(e.target.value))}
+        style={SELECT_STYLE}
+      >
+        {ACTIONS.map((action) => (
+          <option key={action || 'unset'} value={action}>
+            {action || '（未设置）'}
+          </option>
+        ))}
+      </select>
+    </Box>
+  )
+}
+
+function BashRuleEditor(): React.JSX.Element {
   const draft = useConfigStore((s) => s.draft)
   const setField = useConfigStore((s) => s.setField)
   const deleteField = useConfigStore((s) => s.deleteField)
@@ -67,9 +104,19 @@ function BashRules(): React.JSX.Element {
 
   return (
     <Box mt="16px">
-      <Text fontSize="sm" fontWeight="medium" mb="8px">
-        bash 模式规则（后面的规则覆盖前面的）
-      </Text>
+      <HStack justify="space-between" mb="8px">
+        <Text fontSize="sm" fontWeight="medium">
+          bash 模式规则（后面的规则覆盖前面的）
+        </Text>
+        <Button
+          aria-label="使用全局动作"
+          size="sm"
+          variant="ghost"
+          onClick={() => setField(['permission', 'bash'], 'ask')}
+        >
+          使用全局动作
+        </Button>
+      </HStack>
       {entries.map(([pattern, action]) => (
         <HStack key={pattern} mb="8px">
           <Input
@@ -86,9 +133,9 @@ function BashRules(): React.JSX.Element {
             aria-label={`bash 动作 ${pattern}`}
             defaultValue={action}
             onChange={(e) => setField(['permission', 'bash', pattern], e.target.value)}
-            style={{ height: '32px', borderRadius: '8px', padding: '0 8px' }}
+            style={SELECT_STYLE}
           >
-            {['allow', 'ask', 'deny'].map((a) => (
+            {RULE_ACTIONS.map((a) => (
               <option key={a} value={a}>
                 {a}
               </option>
@@ -110,9 +157,9 @@ function BashRules(): React.JSX.Element {
           aria-label="新 bash 动作"
           id="new-bash-action"
           defaultValue="ask"
-          style={{ height: '32px', borderRadius: '8px', padding: '0 8px' }}
+          style={SELECT_STYLE}
         >
-          {['allow', 'ask', 'deny'].map((a) => (
+          {RULE_ACTIONS.map((a) => (
             <option key={a} value={a}>
               {a}
             </option>
@@ -132,6 +179,11 @@ function BashRules(): React.JSX.Element {
       </HStack>
     </Box>
   )
+}
+
+function BashRules(): React.JSX.Element {
+  const bash = useConfigStore((s) => getAt(s.draft, ['permission', 'bash']))
+  return typeof bash === 'string' ? <GlobalBashAction /> : <BashRuleEditor />
 }
 
 export function PermissionPage(): React.JSX.Element {
