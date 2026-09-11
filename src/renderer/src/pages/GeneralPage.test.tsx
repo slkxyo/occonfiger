@@ -5,7 +5,7 @@ import { useConfigStore } from '../store/configStore'
 import { GeneralPage } from './GeneralPage'
 
 describe('GeneralPage', () => {
-  beforeEach(() => useConfigStore.getState().loadConfig({ autoupdate: 'notify' }))
+  beforeEach(() => useConfigStore.getState().loadConfig({ autoupdate: 'notify', snapshot: true }))
 
   it('renders the general fields with current values', () => {
     render(
@@ -17,5 +17,7 @@ describe('GeneralPage', () => {
     expect(screen.getByLabelText('用户名')).toBeInTheDocument()
     expect(screen.getByLabelText('日志级别')).toBeInTheDocument()
     expect(screen.getByLabelText('自动更新')).toBeInTheDocument()
+    expect(screen.getByLabelText('自动更新')).toHaveValue('notify')
+    expect(screen.getByLabelText('快照')).toBeChecked()
   })
 })
