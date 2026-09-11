@@ -1,9 +1,13 @@
 import { Box, Button, HStack, Input, Tabs, Text } from '@chakra-ui/react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Section } from '../components/Section'
 
-type ManagedKind = 'agent' | 'command' | 'skill'
+export type ManagedKind = 'agent' | 'command' | 'skill'
 type ManagedFile = { name: string; path: string }
+
+function toMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
 
 const TABS: { kind: ManagedKind; label: string }[] = [
   { kind: 'agent', label: 'Agents' },
@@ -14,15 +18,40 @@ const TABS: { kind: ManagedKind; label: string }[] = [
 function KindPanel({ kind }: { kind: ManagedKind }): React.JSX.Element {
   const [files, setFiles] = useState<ManagedFile[]>([])
   const [name, setName] = useState('')
+  const [error, setError] = useState('')
 
-  const reload = (): Promise<void> => window.api.listManagedFiles(kind).then(setFiles)
+  const reload = useCallback((): Promise<void> => {
+    return window.api
+      .listManagedFiles(kind)
+      .then((next) => {
+        setFiles(next)
+        setError('')
+      })
+      .catch((e: unknown) => {
+        setError(toMessage(e))
+      })
+  }, [kind])
 
   useEffect(() => {
-    window.api.listManagedFiles(kind).then(setFiles)
-  }, [kind])
+    reload()
+  }, [reload])
 
   return (
     <Box pt="16px">
+      {error ? (
+        <Box
+          role="alert"
+          borderWidth="1px"
+          borderColor="error"
+          borderRadius="card"
+          p="12px"
+          mb="12px"
+        >
+          <Text fontSize="sm" color="error">
+            操作失败：{error}
+          </Text>
+        </Box>
+      ) : null}
       <HStack mb="16px">
         <Input
           aria-label="新建名称"
@@ -35,16 +64,21 @@ function KindPanel({ kind }: { kind: ManagedKind }): React.JSX.Element {
           colorPalette="accent"
           onClick={() => {
             if (!name.trim()) return
-            window.api.createManagedFile(kind, name.trim()).then(() => {
-              setName('')
-              reload()
-            })
+            window.api
+              .createManagedFile(kind, name.trim())
+              .then(() => {
+                setName('')
+                reload()
+              })
+              .catch((e: unknown) => {
+                setError(toMessage(e))
+              })
           }}
         >
           新建
         </Button>
       </HStack>
-      {files.length === 0 ? (
+      {!error && files.length === 0 ? (
         <Text fontSize="sm" color="fg.muted">
           该目录下暂无文件。
         </Text>
@@ -68,7 +102,11 @@ function KindPanel({ kind }: { kind: ManagedKind }): React.JSX.Element {
                 size="xs"
                 variant="ghost"
                 aria-label={`打开 ${file.name}`}
-                onClick={() => window.api.openManagedFile(kind, file.name)}
+                onClick={() => {
+                  window.api.openManagedFile(kind, file.name).catch((e: unknown) => {
+                    setError(toMessage(e))
+                  })
+                }}
               >
                 打开
               </Button>
@@ -79,7 +117,12 @@ function KindPanel({ kind }: { kind: ManagedKind }): React.JSX.Element {
                 onClick={() => {
                   const next = window.prompt('新名称', file.name.replace(/\.md$/, ''))
                   if (!next) return
-                  window.api.renameManagedFile(kind, file.name, next).then(reload)
+                  window.api
+                    .renameManagedFile(kind, file.name, next)
+                    .then(reload)
+                    .catch((e: unknown) => {
+                      setError(toMessage(e))
+                    })
                 }}
               >
                 重命名
@@ -91,7 +134,12 @@ function KindPanel({ kind }: { kind: ManagedKind }): React.JSX.Element {
                 aria-label={`删除 ${file.name}`}
                 onClick={() => {
                   if (!window.confirm(`确定删除 ${file.name} 吗？`)) return
-                  window.api.deleteManagedFile(kind, file.name).then(reload)
+                  window.api
+                    .deleteManagedFile(kind, file.name)
+                    .then(reload)
+                    .catch((e: unknown) => {
+                      setError(toMessage(e))
+                    })
                 }}
               >
                 删除
