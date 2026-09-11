@@ -38,7 +38,7 @@ opencode 通过 `~/.config/opencode/opencode.json`（或 `opencode.jsonc`）进�
 
 - Electron 39 + electron-vite（已有脚手架）。
 - React 19 + TypeScript。
-- Chakra UI（组件库）。
+- Chakra UI v3（`@chakra-ui/react` + `@emotion/react`）；明暗模式用 `next-themes`，主题用 `createSystem(defaultConfig, defineConfig(...))` 定义语义 token。
 - 状态管理：轻量 store（优先 `zustand`；若不想加依赖则用 `useReducer` + context）。
 - 解析/校验：`jsonc-parser`（读取容错）、`ajv`（schema 校验）。
 - 测试：Vitest + jsdom + `@testing-library/react`。
@@ -115,7 +115,7 @@ deprecated 字段不在导航表单中展示，仅通过上述保留机制维持
 
 只读展示 `JSON.stringify(draft, null, 2)`，由顶部按钮唤起。
 
-## 6. 界面结构与导航
+## 6. 界面结构、导航与 UI 设计
 
 左侧固定导航 + 右侧内容区 + 顶部工具条。
 
@@ -142,6 +142,30 @@ deprecated 字段不在导航表单中展示，仅通过上述保留机制维持
 12. 文件管理
 
 每个导航项是一屏表单，切换不丢草稿。
+
+### UI 设计规范
+
+**风格基调**：简约高级。中性灰为基底，弱化装饰，靠留白、细边框与克制配色营造质感；强调色只用于交互元素（按钮、选中态、开关、链接），大面积保持中性。
+
+**明暗模式**：默认跟随系统，顶部工具条提供「亮 / 暗 / 跟随系统」三态切换，用户选择持久化。用 `next-themes` 的 `ThemeProvider` 提供，Chakra 语义 token 通过 `_light` / `_dark` 自动适配。
+
+**布局**：
+- 左侧固定侧边栏 220px（可折叠为 64px 图标栏）+ 顶部工具条 56px + 右侧内容区。
+- 内容区最大宽度 920px，页面内边距 24–32px。
+- 配置按卡片分组，卡片间距 16px；表单 label 置顶、控件全宽、辅助说明小字灰色。
+
+**字体**：
+- 界面：`Inter`, `-apple-system`, `PingFang SC`, `system-ui`, sans-serif。
+- 代码 / JSON / 密钥：`JetBrains Mono`, `ui-monospace`, `SFMono-Regular`, monospace。
+- 基础字号 14px，标题 18–20px，辅助文字 12px，行高 1.5。
+
+**配色（Indigo 强调色）**：
+- 亮色：`bg.default #FFFFFF`、`bg.subtle #F7F8FA`、`bg.muted #F0F1F3`；`fg.default #1A1D21`、`fg.muted #6B7280`、`fg.subtle #9CA3AF`；`border.default #E4E6EA`；`accent #4F46E5`。
+- 暗色：`bg.default #0F1115`、`bg.subtle #16181D`、`bg.muted #1E2128`；`fg.default #E8EAED`、`fg.muted #9BA1A9`、`fg.subtle #6B7280`；`border.default #262A31`；`accent #818CF8`。
+- 语义色：success `#10B981`、warning `#F59E0B`、error `#EF4444`（暗色用低饱和变体）。
+- 圆角：卡片 12px、控件 8px；1px 细边框 + 极弱阴影；间距按 8px 基准（8 / 12 / 16 / 24 / 32）。
+
+**实现**：上述颜色全部定义为 Chakra 语义 token（`bg.*`、`fg.*`、`border.*`、`accent.*`），组件只引用语义 token，明暗切换时自动解析，不写死颜色值。
 
 ## 7. 文件读写
 
