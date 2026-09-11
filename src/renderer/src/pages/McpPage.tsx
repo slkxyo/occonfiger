@@ -44,6 +44,7 @@ export function McpPage(): React.JSX.Element {
         addLabel="添加 MCP 服务"
         inputLabel="新 MCP 服务名"
         placeholder="playwright"
+        initialValue={{ type: 'local' }}
       >
         {(server) => <McpCard server={server} />}
       </ListEditor>

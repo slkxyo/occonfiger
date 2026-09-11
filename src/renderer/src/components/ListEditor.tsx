@@ -9,6 +9,7 @@ export function ListEditor(props: {
   addLabel: string
   inputLabel: string
   placeholder?: string
+  initialValue?: unknown
   children: (key: string) => React.ReactNode
 }): React.JSX.Element {
   const [name, setName] = useState('')
@@ -39,7 +40,7 @@ export function ListEditor(props: {
               setName('')
               return
             }
-            setField([...props.path, trimmed], {})
+            setField([...props.path, trimmed], props.initialValue ?? {})
             setName('')
           }}
         >
