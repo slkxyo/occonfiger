@@ -10,9 +10,7 @@ function wrap(ui: React.ReactElement): ReturnType<typeof render> {
 }
 
 describe('ListEditor', () => {
-  beforeEach(() =>
-    useConfigStore.getState().loadConfig({ provider: { alpha: { name: 'Alpha' } } })
-  )
+  beforeEach(() => useConfigStore.getState().loadConfig({ provider: { alpha: { name: 'Alpha' } } }))
 
   it('does not overwrite an existing key', async () => {
     wrap(
