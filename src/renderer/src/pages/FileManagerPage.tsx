@@ -1,43 +1,69 @@
-import { Box, Button, HStack, Input, Tabs, Text } from '@chakra-ui/react'
+import { Box, Button, Flex, HStack, Input, Text, Textarea } from '@chakra-ui/react'
 import { useCallback, useEffect, useState } from 'react'
 import { Section } from '../components/Section'
 
-export type ManagedKind = 'agent' | 'command' | 'skill'
 type ManagedFile = { name: string; path: string }
 
 function toMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
-const TABS: { kind: ManagedKind; label: string }[] = [
-  { kind: 'agent', label: 'Agents' },
-  { kind: 'command', label: 'Commands' },
-  { kind: 'skill', label: 'Skills' }
-]
-
-function KindPanel({ kind }: { kind: ManagedKind }): React.JSX.Element {
+export function FileManagerPage(): React.JSX.Element {
   const [files, setFiles] = useState<ManagedFile[]>([])
+  const [selected, setSelected] = useState('')
+  const [content, setContent] = useState('')
+  const [saved, setSaved] = useState('')
   const [name, setName] = useState('')
+  const [status, setStatus] = useState('')
   const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
 
   const reload = useCallback((): Promise<void> => {
     return window.api
-      .listManagedFiles(kind)
+      .listManagedFiles('skill')
       .then((next) => {
         setFiles(next)
         setError('')
       })
-      .catch((e: unknown) => {
-        setError(toMessage(e))
-      })
-  }, [kind])
+      .catch((e: unknown) => setError(toMessage(e)))
+  }, [])
 
   useEffect(() => {
     reload()
   }, [reload])
 
+  const select = (skill: string): void => {
+    setSelected(skill)
+    setStatus('')
+    setError('')
+    window.api
+      .readManagedFile('skill', skill)
+      .then((text) => {
+        setContent(text)
+        setSaved(text)
+      })
+      .catch((e: unknown) => setError(toMessage(e)))
+  }
+
+  const dirty = content !== saved
+
+  const save = (): void => {
+    if (!selected || saving || !dirty) return
+    setSaving(true)
+    setStatus('')
+    setError('')
+    window.api
+      .writeManagedFile('skill', selected, content)
+      .then(() => {
+        setSaved(content)
+        setStatus('已保存')
+      })
+      .catch((e: unknown) => setError(toMessage(e)))
+      .finally(() => setSaving(false))
+  }
+
   return (
-    <Box pt="16px">
+    <Section title="SKILL 管理" description="管理 skills 目录下的 SKILL，可直接预览并编辑内容。">
       {error ? (
         <Box
           role="alert"
@@ -56,122 +82,174 @@ function KindPanel({ kind }: { kind: ManagedKind }): React.JSX.Element {
         <Input
           aria-label="新建名称"
           value={name}
-          placeholder="名称"
+          placeholder="新 SKILL 名称"
           onChange={(e) => setName(e.target.value)}
         />
         <Button
           size="sm"
           colorPalette="accent"
           onClick={() => {
-            if (!name.trim()) return
+            const next = name.trim()
+            if (!next) return
             window.api
-              .createManagedFile(kind, name.trim())
+              .createManagedFile('skill', next)
               .then(() => {
                 setName('')
                 reload()
               })
-              .catch((e: unknown) => {
-                setError(toMessage(e))
-              })
+              .catch((e: unknown) => setError(toMessage(e)))
           }}
         >
           新建
         </Button>
       </HStack>
-      {!error && files.length === 0 ? (
-        <Text fontSize="sm" color="fg.muted">
-          该目录下暂无文件。
-        </Text>
-      ) : (
-        files.map((file) => (
-          <HStack
-            key={file.path}
-            justify="space-between"
-            borderWidth="1px"
-            borderColor="border.default"
-            borderRadius="card"
-            p="12px"
-            mb="8px"
-            bg="bg.default"
-          >
-            <Text fontFamily="mono" fontSize="sm">
-              {file.name}
+      <Flex gap="16px" align="stretch">
+        <Box w="220px" flexShrink={0} maxH="60vh" overflowY="auto">
+          {files.length === 0 ? (
+            <Text fontSize="sm" color="fg.muted">
+              暂无 SKILL。
             </Text>
-            <HStack gap="8px">
+          ) : (
+            files.map((file) => (
               <Button
-                size="xs"
-                variant="ghost"
-                aria-label={`打开 ${file.name}`}
-                onClick={() => {
-                  window.api.openManagedFile(kind, file.name).catch((e: unknown) => {
-                    setError(toMessage(e))
-                  })
-                }}
+                key={file.path}
+                variant={selected === file.name ? 'subtle' : 'ghost'}
+                colorPalette={selected === file.name ? 'accent' : undefined}
+                justifyContent="flex-start"
+                w="100%"
+                mb="4px"
+                fontFamily="mono"
+                fontWeight="normal"
+                onClick={() => select(file.name)}
               >
-                打开
+                {file.name}
               </Button>
-              <Button
-                size="xs"
-                variant="ghost"
-                aria-label={`重命名 ${file.name}`}
-                onClick={() => {
-                  const next = window.prompt('新名称', file.name.replace(/\.md$/, ''))
-                  if (!next) return
-                  window.api
-                    .renameManagedFile(kind, file.name, next)
-                    .then(reload)
-                    .catch((e: unknown) => {
-                      setError(toMessage(e))
-                    })
+            ))
+          )}
+        </Box>
+        <Box flex="1" minW="0">
+          {selected ? (
+            <>
+              <HStack justify="space-between" mb="8px">
+                <Text fontFamily="mono" fontSize="sm" fontWeight="medium">
+                  {selected}
+                </Text>
+                <HStack gap="8px">
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    aria-label={`打开 ${selected}`}
+                    onClick={() => {
+                      window.api.openManagedFile('skill', selected).catch((e: unknown) => {
+                        setError(toMessage(e))
+                      })
+                    }}
+                  >
+                    打开
+                  </Button>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    aria-label={`重命名 ${selected}`}
+                    onClick={() => {
+                      const next = window.prompt('新名称', selected)
+                      if (!next || next === selected) return
+                      window.api
+                        .renameManagedFile('skill', selected, next)
+                        .then(() => {
+                          setSelected(next)
+                          reload()
+                        })
+                        .catch((e: unknown) => {
+                          setError(toMessage(e))
+                        })
+                    }}
+                  >
+                    重命名
+                  </Button>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    colorPalette="error"
+                    aria-label={`删除 ${selected}`}
+                    onClick={() => {
+                      if (!window.confirm(`确定删除 ${selected} 吗？`)) return
+                      window.api
+                        .deleteManagedFile('skill', selected)
+                        .then(() => {
+                          setSelected('')
+                          setContent('')
+                          setSaved('')
+                          reload()
+                        })
+                        .catch((e: unknown) => {
+                          setError(toMessage(e))
+                        })
+                    }}
+                  >
+                    删除
+                  </Button>
+                </HStack>
+              </HStack>
+              <Textarea
+                aria-label="SKILL 内容"
+                value={content}
+                onChange={(e) => {
+                  setContent(e.target.value)
+                  setStatus('')
                 }}
-              >
-                重命名
-              </Button>
-              <Button
-                size="xs"
-                variant="ghost"
-                colorPalette="error"
-                aria-label={`删除 ${file.name}`}
-                onClick={() => {
-                  if (!window.confirm(`确定删除 ${file.name} 吗？`)) return
-                  window.api
-                    .deleteManagedFile(kind, file.name)
-                    .then(reload)
-                    .catch((e: unknown) => {
-                      setError(toMessage(e))
-                    })
-                }}
-              >
-                删除
-              </Button>
-            </HStack>
-          </HStack>
-        ))
-      )}
-    </Box>
-  )
-}
-
-export function FileManagerPage(): React.JSX.Element {
-  return (
-    <Section
-      title="文件管理"
-      description="管理 agent / command / skill 目录下的文件。内容请用系统编辑器打开后编辑。"
-    >
-      <Tabs.Root defaultValue="agent" lazyMount unmountOnExit>
-        <Tabs.List>
-          {TABS.map((tab) => (
-            <Tabs.Trigger key={tab.kind} value={tab.kind}>
-              {tab.label}
-            </Tabs.Trigger>
-          ))}
-        </Tabs.List>
-        {TABS.map((tab) => (
-          <Tabs.Content key={tab.kind} value={tab.kind}>
-            <KindPanel kind={tab.kind} />
-          </Tabs.Content>
-        ))}
-      </Tabs.Root>
+                fontFamily="mono"
+                fontSize="sm"
+                lineHeight="1.7"
+                minH="52vh"
+                p="16px"
+                bg="bg.default"
+                borderColor="border.default"
+                borderRadius="card"
+                resize="vertical"
+              />
+              <HStack justify="space-between" mt="12px">
+                <Text fontSize="xs" color="fg.muted">
+                  {content.length} 字符
+                </Text>
+                <HStack gap="12px">
+                  {status ? (
+                    <Text fontSize="sm" color="fg.muted">
+                      {status}
+                    </Text>
+                  ) : dirty ? (
+                    <Text fontSize="sm" color="fg.muted">
+                      有未保存的修改
+                    </Text>
+                  ) : null}
+                  <Button
+                    size="sm"
+                    colorPalette="accent"
+                    disabled={!dirty || saving}
+                    onClick={save}
+                  >
+                    {saving ? '保存中…' : '保存'}
+                  </Button>
+                </HStack>
+              </HStack>
+            </>
+          ) : (
+            <Flex
+              align="center"
+              justify="center"
+              h="52vh"
+              borderWidth="1px"
+              borderColor="border.default"
+              borderRadius="card"
+              bg="bg.default"
+            >
+              <Text fontSize="sm" color="fg.muted">
+                请选择一个 SKILL。
+              </Text>
+            </Flex>
+          )}
+        </Box>
+      </Flex>
     </Section>
   )
 }

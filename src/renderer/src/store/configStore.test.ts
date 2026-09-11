@@ -30,6 +30,23 @@ describe('configStore', () => {
     expect(useConfigStore.getState().dirty).toBe(false)
   })
 
+  it('discards changes back to the loaded snapshot', () => {
+    useConfigStore.getState().loadConfig({ model: 'a/b' })
+    useConfigStore.getState().setField(['model'], 'c/d')
+    expect(useConfigStore.getState().dirty).toBe(true)
+    useConfigStore.getState().discardChanges()
+    expect(useConfigStore.getState().draft).toEqual({ model: 'a/b' })
+    expect(useConfigStore.getState().dirty).toBe(false)
+  })
+
+  it('treats the saved draft as the new baseline', () => {
+    useConfigStore.getState().loadConfig({ model: 'a/b' })
+    useConfigStore.getState().setField(['model'], 'c/d')
+    useConfigStore.getState().markSaved()
+    useConfigStore.getState().discardChanges()
+    expect(useConfigStore.getState().draft).toEqual({ model: 'c/d' })
+  })
+
   it('preserves unknown fields when editing one field', () => {
     useConfigStore.getState().loadConfig({
       model: 'a/b',

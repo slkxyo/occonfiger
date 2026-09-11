@@ -1,8 +1,22 @@
+import { Switch } from '@chakra-ui/react'
 import { Section } from '../components/Section'
 import { ListEditor } from '../components/ListEditor'
 import { KeyValueEditor } from '../components/KeyValueEditor'
-import { OAuthField, SelectField, SwitchField, TagsField, TextField } from '../fields/controls'
+import { OAuthField, SelectField, TagsField, TextField } from '../fields/controls'
 import { useField } from '../fields/useField'
+
+function EnabledSwitch({ server }: { server: string }): React.JSX.Element {
+  const { value, set, clear } = useField(['mcp', server, 'enabled'])
+  return (
+    <Switch.Root
+      checked={value !== false}
+      onCheckedChange={(e) => (e.checked ? clear() : set(false))}
+    >
+      <Switch.HiddenInput aria-label={`${server} 启用`} />
+      <Switch.Control />
+    </Switch.Root>
+  )
+}
 
 function McpCard({ server }: { server: string }): React.JSX.Element {
   const { value } = useField(['mcp', server, 'type'])
@@ -15,7 +29,6 @@ function McpCard({ server }: { server: string }): React.JSX.Element {
         options={['local', 'remote']}
         allowEmpty={false}
       />
-      <SwitchField path={['mcp', server, 'enabled']} label="启用" />
       {type === 'local' ? (
         <>
           <TagsField path={['mcp', server, 'command']} label="命令" placeholder="回车添加参数" />
@@ -39,6 +52,14 @@ function McpCard({ server }: { server: string }): React.JSX.Element {
   )
 }
 
+function sortByEnabled(keys: string[], container: Record<string, unknown>): string[] {
+  return [...keys].sort((a, b) => {
+    const av = (container[a] as { enabled?: unknown } | undefined)?.enabled
+    const bv = (container[b] as { enabled?: unknown } | undefined)?.enabled
+    return (av === false ? 1 : 0) - (bv === false ? 1 : 0)
+  })
+}
+
 export function McpPage(): React.JSX.Element {
   return (
     <Section title="MCP 服务" description="Model Context Protocol 服务器配置。">
@@ -47,7 +68,11 @@ export function McpPage(): React.JSX.Element {
         addLabel="添加 MCP 服务"
         inputLabel="新 MCP 服务名"
         placeholder="playwright"
-        initialValue={{ type: 'local' }}
+        hideAdd
+        collapsible
+        defaultCollapsed
+        sortKeys={sortByEnabled}
+        titleAccessory={(server) => <EnabledSwitch server={server} />}
       >
         {(server) => <McpCard server={server} />}
       </ListEditor>

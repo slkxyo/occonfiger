@@ -1,18 +1,25 @@
 import {
   existsSync,
   mkdirSync,
+  readFileSync,
   readdirSync,
   renameSync,
   rmSync,
   statSync,
   writeFileSync
 } from 'node:fs'
-import { join, normalize } from 'node:path'
+import { dirname, join, normalize } from 'node:path'
 
 export type ManagedKind = 'agent' | 'command' | 'skill'
 export type ManagedFile = { name: string; path: string }
 
 const MANAGED_KINDS = ['agent', 'command', 'skill'] as const
+
+const MANAGED_DIRS: Record<ManagedKind, string> = {
+  agent: 'agent',
+  command: 'command',
+  skill: 'skills'
+}
 
 function assertSafeName(name: string): void {
   if (name === '' || name === '.' || name === '..' || name.includes('/') || name.includes('\\')) {
@@ -28,7 +35,7 @@ function assertManagedKind(kind: unknown): asserts kind is ManagedKind {
 
 export function managedDirFor(configDir: string, kind: ManagedKind): string {
   assertManagedKind(kind)
-  return join(configDir, kind)
+  return join(configDir, MANAGED_DIRS[kind])
 }
 
 export function managedFilePath(configDir: string, kind: ManagedKind, name: string): string {
@@ -113,4 +120,27 @@ export function renameManagedFile(dir: string, kind: ManagedKind, from: string, 
 export function deleteManagedFile(dir: string, kind: ManagedKind, name: string): void {
   const target = managedFilePath(dir, kind, name)
   rmSync(target, { recursive: kind === 'skill', force: true })
+}
+
+function managedContentPath(configDir: string, kind: ManagedKind, name: string): string {
+  assertSafeName(name)
+  if (kind === 'skill') return join(managedDirFor(configDir, kind), name, 'SKILL.md')
+  return join(managedDirFor(configDir, kind), `${name}.md`)
+}
+
+export function readManagedFileContent(configDir: string, kind: ManagedKind, name: string): string {
+  const target = managedContentPath(configDir, kind, name)
+  if (!existsSync(target)) return ''
+  return readFileSync(target, 'utf8')
+}
+
+export function writeManagedFileContent(
+  configDir: string,
+  kind: ManagedKind,
+  name: string,
+  content: string
+): void {
+  const target = managedContentPath(configDir, kind, name)
+  mkdirSync(dirname(target), { recursive: true })
+  writeFileSync(target, content, 'utf8')
 }

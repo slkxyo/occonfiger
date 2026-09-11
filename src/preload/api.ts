@@ -9,10 +9,14 @@ export interface Api {
   saveConfig: (data: unknown, force?: boolean) => Promise<string[]>
   getConfigPath: () => Promise<string>
   getRawContent: () => Promise<string | null>
+  readAgents: () => Promise<string>
+  writeAgents: (content: string) => Promise<null>
   listCredentials: () => Promise<{ provider: string; type: string; keyTail?: string }[]>
   updateCredentialKey: (provider: string, key: string) => Promise<null>
   deleteCredential: (provider: string) => Promise<null>
   listManagedFiles: (kind: string) => Promise<{ name: string; path: string }[]>
+  readManagedFile: (kind: string, name: string) => Promise<string>
+  writeManagedFile: (kind: string, name: string, content: string) => Promise<null>
   createManagedFile: (kind: string, name: string) => Promise<string>
   renameManagedFile: (kind: string, from: string, to: string) => Promise<null>
   deleteManagedFile: (kind: string, name: string) => Promise<null>
@@ -40,6 +44,8 @@ export function createApi(invoke: Invoke): Api {
       unwrap<string[]>(invoke, IPC.configSave, data, force),
     getConfigPath: () => unwrap<string>(invoke, IPC.configPath),
     getRawContent: () => unwrap<string | null>(invoke, IPC.configRaw),
+    readAgents: () => unwrap<string>(invoke, IPC.agentsRead),
+    writeAgents: (content: string) => unwrap<null>(invoke, IPC.agentsWrite, content),
     listCredentials: () =>
       unwrap<{ provider: string; type: string; keyTail?: string }[]>(invoke, IPC.authList),
     updateCredentialKey: (provider: string, key: string) =>
@@ -47,6 +53,10 @@ export function createApi(invoke: Invoke): Api {
     deleteCredential: (provider: string) => unwrap<null>(invoke, IPC.authDelete, provider),
     listManagedFiles: (kind: string) =>
       unwrap<{ name: string; path: string }[]>(invoke, IPC.filesList, kind),
+    readManagedFile: (kind: string, name: string) =>
+      unwrap<string>(invoke, IPC.filesRead, kind, name),
+    writeManagedFile: (kind: string, name: string, content: string) =>
+      unwrap<null>(invoke, IPC.filesWrite, kind, name, content),
     createManagedFile: (kind: string, name: string) =>
       unwrap<string>(invoke, IPC.filesCreate, kind, name),
     renameManagedFile: (kind: string, from: string, to: string) =>

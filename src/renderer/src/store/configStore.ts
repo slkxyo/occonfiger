@@ -34,17 +34,20 @@ function deleteAt(root: Draft, path: string[]): void {
 
 type ConfigState = {
   draft: Draft
+  original: Draft
   dirty: boolean
   loadConfig: (data: Draft) => void
   setField: (path: string[], value: unknown) => void
   deleteField: (path: string[]) => void
   markSaved: () => void
+  discardChanges: () => void
 }
 
 export const useConfigStore = create<ConfigState>((set, get) => ({
   draft: {},
+  original: {},
   dirty: false,
-  loadConfig: (data) => set({ draft: clone(data), dirty: false }),
+  loadConfig: (data) => set({ draft: clone(data), original: clone(data), dirty: false }),
   setField: (path, value) => {
     const draft = clone(get().draft)
     setAt(draft, path, value)
@@ -55,5 +58,6 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     deleteAt(draft, path)
     set({ draft, dirty: true })
   },
-  markSaved: () => set({ dirty: false })
+  markSaved: () => set({ original: clone(get().draft), dirty: false }),
+  discardChanges: () => set({ draft: clone(get().original), dirty: false })
 }))

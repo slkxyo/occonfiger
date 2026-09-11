@@ -1,5 +1,6 @@
 import { Button, HStack, IconButton, Input, Switch, Text, Textarea } from '@chakra-ui/react'
 import { Field } from './Field'
+import { MenuSelect } from './MenuSelect'
 import { useField } from './useField'
 
 function asString(value: unknown): string {
@@ -177,27 +178,13 @@ export function SelectField(props: {
   const { value, set, clear } = useField(props.path)
   return (
     <Field label={props.label} description={props.description}>
-      <select
-        aria-label={props.label}
+      <MenuSelect
+        ariaLabel={props.label}
+        options={props.options}
         value={asString(value)}
-        onChange={(e) => (e.target.value === '' ? clear() : set(e.target.value))}
-        style={{
-          width: '100%',
-          height: '32px',
-          borderRadius: '8px',
-          border: '1px solid var(--chakra-colors-border-default)',
-          background: 'var(--chakra-colors-bg-default)',
-          color: 'inherit',
-          padding: '0 8px'
-        }}
-      >
-        {props.allowEmpty !== false ? <option value="">（未设置）</option> : null}
-        {props.options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
+        allowEmpty={props.allowEmpty}
+        onChange={(v) => (v === '' ? clear() : set(v))}
+      />
     </Field>
   )
 }

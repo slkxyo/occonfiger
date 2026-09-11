@@ -1,4 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { shell } from 'electron'
 import { IPC, registerIpc } from './ipc'
 import type { ConfigPaths } from './config/paths'
@@ -23,6 +26,7 @@ function fakeIpc(): {
 const paths: ConfigPaths = {
   configDir: '/cfg',
   configFile: '/cfg/opencode.json',
+  agentsFile: '/cfg/AGENTS.md',
   dataDir: '/data',
   authFile: '/data/auth.json'
 }
@@ -154,5 +158,36 @@ describe('registerIpc', () => {
     expect(result.ok).toBe(false)
     expect(result.error).toContain('非法的类型')
     expect(shell.openPath).not.toHaveBeenCalled()
+  })
+
+  it('reads and writes the global AGENTS.md content', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'occ-ipc-agents-'))
+    try {
+      const ipc = fakeIpc()
+      registerIpc(ipc, { ...paths, configDir: dir, agentsFile: join(dir, 'AGENTS.md') })
+      expect(await ipc.invoke(IPC.agentsRead)).toEqual({ ok: true, data: '' })
+      expect(await ipc.invoke(IPC.agentsWrite, '你好世界')).toEqual({ ok: true, data: null })
+      expect(await ipc.invoke(IPC.agentsRead)).toEqual({ ok: true, data: '你好世界' })
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('reads and writes managed file content', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'occ-ipc-files-'))
+    try {
+      const ipc = fakeIpc()
+      registerIpc(ipc, { ...paths, configDir: dir })
+      expect(await ipc.invoke(IPC.filesWrite, 'skill', 'my-skill', '内容')).toEqual({
+        ok: true,
+        data: null
+      })
+      expect(await ipc.invoke(IPC.filesRead, 'skill', 'my-skill')).toEqual({
+        ok: true,
+        data: '内容'
+      })
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
   })
 })

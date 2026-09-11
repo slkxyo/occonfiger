@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: occonfiger
+appId: com.slkxy.occonfiger
+productName: OCConfiger
 directories:
   buildResources: build
 files:
@@ -30,7 +30,7 @@ mac:
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
   notarize: false
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: ${productName}-${version}.${ext}
 linux:
   target:
     - AppImage

@@ -1,36 +1,24 @@
-import { Button, HStack } from '@chakra-ui/react'
+import { Button } from '@chakra-ui/react'
+import { Monitor, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
+import { nextTheme, type ThemeName } from './theme-order'
+
+const LABELS: Record<ThemeName, string> = { light: '亮色', dark: '暗色', system: '自动' }
+const ICONS: Record<ThemeName, typeof Sun> = { light: Sun, dark: Moon, system: Monitor }
 
 export function ColorModeButton(): React.JSX.Element {
   const { theme, setTheme } = useTheme()
-  const variant = (value: string): React.ComponentProps<typeof Button>['variant'] =>
-    theme === value ? 'subtle' : 'ghost'
+  const current = (theme ?? 'system') as ThemeName
+  const Icon = ICONS[current] ?? Monitor
+  const next = nextTheme(current)
   return (
-    <HStack gap="0">
-      <Button
-        size="xs"
-        variant={variant('light')}
-        aria-label="亮色"
-        onClick={() => setTheme('light')}
-      >
-        ☀️
-      </Button>
-      <Button
-        size="xs"
-        variant={variant('dark')}
-        aria-label="暗色"
-        onClick={() => setTheme('dark')}
-      >
-        🌙
-      </Button>
-      <Button
-        size="xs"
-        variant={variant('system')}
-        aria-label="切换主题"
-        onClick={() => setTheme('system')}
-      >
-        自动
-      </Button>
-    </HStack>
+    <Button
+      size="sm"
+      variant="ghost"
+      aria-label={`主题：${LABELS[current]}，点击切换为${LABELS[next]}`}
+      onClick={() => setTheme(next)}
+    >
+      <Icon size={16} />
+    </Button>
   )
 }

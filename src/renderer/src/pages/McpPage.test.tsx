@@ -5,6 +5,10 @@ import { Provider } from '../components/ui/provider'
 import { useConfigStore } from '../store/configStore'
 import { McpPage } from './McpPage'
 
+async function expand(name: string): Promise<void> {
+  await userEvent.click(screen.getByRole('button', { name: `展开 ${name}` }))
+}
+
 describe('McpPage', () => {
   afterEach(() => cleanup())
 
@@ -12,17 +16,28 @@ describe('McpPage', () => {
     useConfigStore.getState().loadConfig({ mcp: { exa: { type: 'remote', url: 'https://x' } } })
   )
 
-  it('renders remote fields for a remote server', () => {
+  it('collapses server details by default', () => {
     render(
       <Provider>
         <McpPage />
       </Provider>
     )
+    expect(screen.queryByLabelText('URL')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '展开 exa' })).toBeInTheDocument()
+  })
+
+  it('renders remote fields for a remote server after expanding', async () => {
+    render(
+      <Provider>
+        <McpPage />
+      </Provider>
+    )
+    await expand('exa')
     expect(screen.getByLabelText('URL')).toBeInTheDocument()
     expect(screen.queryByLabelText('命令')).not.toBeInTheDocument()
   })
 
-  it('renders local environment as a key-value editor', () => {
+  it('renders local environment as a key-value editor', async () => {
     useConfigStore
       .getState()
       .loadConfig({ mcp: { s: { type: 'local', environment: { FOO: 'bar' } } } })
@@ -31,10 +46,11 @@ describe('McpPage', () => {
         <McpPage />
       </Provider>
     )
+    await expand('s')
     expect(screen.getByLabelText('环境变量 值 FOO')).toHaveValue('bar')
   })
 
-  it('renders remote headers as a key-value editor', () => {
+  it('renders remote headers as a key-value editor', async () => {
     useConfigStore.getState().loadConfig({
       mcp: { exa: { type: 'remote', url: 'https://x', headers: { 'X-Token': 'abc' } } }
     })
@@ -43,6 +59,7 @@ describe('McpPage', () => {
         <McpPage />
       </Provider>
     )
+    await expand('exa')
     expect(screen.getByLabelText('请求头 值 X-Token')).toHaveValue('abc')
   })
 
@@ -52,6 +69,7 @@ describe('McpPage', () => {
         <McpPage />
       </Provider>
     )
+    await expand('exa')
     const oauth = screen.getByRole('checkbox', { name: '禁用自动检测' })
     expect(oauth).not.toBeChecked()
     await userEvent.click(oauth)
@@ -64,7 +82,7 @@ describe('McpPage', () => {
     })
   })
 
-  it('keeps an oauth object untouched and hides the switch', () => {
+  it('keeps an oauth object untouched and hides the switch', async () => {
     useConfigStore.getState().loadConfig({
       mcp: { exa: { type: 'remote', url: 'https://x', oauth: { clientId: 'abc' } } }
     })
@@ -73,6 +91,7 @@ describe('McpPage', () => {
         <McpPage />
       </Provider>
     )
+    await expand('exa')
     expect(screen.queryByRole('checkbox', { name: '禁用自动检测' })).not.toBeInTheDocument()
     expect(screen.getByText('当前为 OAuth 对象配置，暂不支持可视化编辑')).toBeInTheDocument()
     expect(useConfigStore.getState().draft.mcp).toEqual({
@@ -89,6 +108,7 @@ describe('McpPage', () => {
         <McpPage />
       </Provider>
     )
+    await expand('exa')
     const oauth = screen.getByRole('checkbox', { name: '禁用自动检测' })
     expect(oauth).toBeChecked()
     await userEvent.click(oauth)
@@ -97,15 +117,50 @@ describe('McpPage', () => {
     })
   })
 
-  it('initializes a new server with local type', async () => {
-    useConfigStore.getState().loadConfig({})
+  it('toggles enabled from the collapsed header', async () => {
     render(
       <Provider>
         <McpPage />
       </Provider>
     )
-    await userEvent.type(screen.getByLabelText('新 MCP 服务名'), 'playwright')
-    await userEvent.click(screen.getByRole('button', { name: '添加 MCP 服务' }))
-    expect(useConfigStore.getState().draft.mcp).toEqual({ playwright: { type: 'local' } })
+    const toggle = screen.getByRole('checkbox', { name: 'exa 启用' })
+    expect(toggle).toBeChecked()
+    await userEvent.click(toggle)
+    expect(useConfigStore.getState().draft.mcp).toEqual({
+      exa: { type: 'remote', url: 'https://x', enabled: false }
+    })
+    await userEvent.click(toggle)
+    expect(useConfigStore.getState().draft.mcp).toEqual({
+      exa: { type: 'remote', url: 'https://x' }
+    })
+  })
+
+  it('lists enabled servers before disabled ones', () => {
+    useConfigStore.getState().loadConfig({
+      mcp: {
+        off: { type: 'local', enabled: false },
+        on: { type: 'local' },
+        explicit: { type: 'local', enabled: true }
+      }
+    })
+    render(
+      <Provider>
+        <McpPage />
+      </Provider>
+    )
+    const names = screen
+      .getAllByRole('button')
+      .map((button) => button.getAttribute('aria-label'))
+      .filter((label): label is string => typeof label === 'string' && /^(展开|折叠) /.test(label))
+    expect(names).toEqual(['展开 on', '展开 explicit', '展开 off'])
+  })
+
+  it('does not offer a button to add a new server', () => {
+    render(
+      <Provider>
+        <McpPage />
+      </Provider>
+    )
+    expect(screen.queryByRole('button', { name: '添加 MCP 服务' })).not.toBeInTheDocument()
   })
 })

@@ -8,7 +8,9 @@ import {
   listManagedFiles,
   managedDirFor,
   managedFilePath,
-  renameManagedFile
+  readManagedFileContent,
+  renameManagedFile,
+  writeManagedFileContent
 } from './managedFiles'
 
 const dirs: string[] = []
@@ -26,7 +28,7 @@ describe('managedFiles', () => {
   it('maps kinds to directories', () => {
     expect(managedDirFor('/cfg', 'agent')).toBe('/cfg/agent')
     expect(managedDirFor('/cfg', 'command')).toBe('/cfg/command')
-    expect(managedDirFor('/cfg', 'skill')).toBe('/cfg/skill')
+    expect(managedDirFor('/cfg', 'skill')).toBe('/cfg/skills')
   })
 
   it('rejects unsafe kinds to prevent path traversal', () => {
@@ -39,7 +41,7 @@ describe('managedFiles', () => {
   it('rejects unsafe names in managedFilePath', () => {
     const dir = tmpDir()
     expect(managedFilePath(dir, 'command', 'deploy')).toBe(join(dir, 'command', 'deploy.md'))
-    expect(managedFilePath(dir, 'skill', 'my-skill')).toBe(join(dir, 'skill', 'my-skill'))
+    expect(managedFilePath(dir, 'skill', 'my-skill')).toBe(join(dir, 'skills', 'my-skill'))
     expect(() => managedFilePath(dir, 'command', '../evil')).toThrow('非法的名称')
   })
 
@@ -57,6 +59,14 @@ describe('managedFiles', () => {
     const dir = tmpDir()
     createManagedFile(dir, 'skill', 'my-skill')
     expect(listManagedFiles(dir, 'skill').map((f) => f.name)).toEqual(['my-skill'])
+  })
+
+  it('lists pre-existing skills from the skills directory', () => {
+    const dir = tmpDir()
+    createManagedFile(dir, 'skill', 'existing')
+    const nested = join(dir, 'skills', 'existing', 'SKILL.md')
+    expect(existsSync(nested)).toBe(true)
+    expect(listManagedFiles(dir, 'skill').map((f) => f.name)).toEqual(['existing'])
   })
 
   it('rejects unsafe names in create and writes nothing', () => {
@@ -143,5 +153,25 @@ describe('managedFiles', () => {
         .map((f) => f.name)
         .sort()
     ).toEqual(['Deploy.md', 'deploy.md'])
+  })
+
+  it('reads and writes skill content through SKILL.md', () => {
+    const dir = tmpDir()
+    createManagedFile(dir, 'skill', 'my-skill')
+    expect(readManagedFileContent(dir, 'skill', 'my-skill')).toContain('name: my-skill')
+    writeManagedFileContent(dir, 'skill', 'my-skill', '新内容')
+    expect(readManagedFileContent(dir, 'skill', 'my-skill')).toBe('新内容')
+  })
+
+  it('reads and writes agent content', () => {
+    const dir = tmpDir()
+    createManagedFile(dir, 'agent', 'reviewer')
+    writeManagedFileContent(dir, 'agent', 'reviewer', '你好')
+    expect(readManagedFileContent(dir, 'agent', 'reviewer')).toBe('你好')
+  })
+
+  it('returns an empty string for missing content', () => {
+    const dir = tmpDir()
+    expect(readManagedFileContent(dir, 'skill', 'missing')).toBe('')
   })
 })

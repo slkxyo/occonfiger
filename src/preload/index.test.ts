@@ -34,4 +34,28 @@ describe('createApi', () => {
     await api.openManagedFile('skill', 'my-skill')
     expect(invoke).toHaveBeenCalledWith(IPC.filesOpen, 'skill', 'my-skill')
   })
+
+  it('forwards readAgents and writeAgents', async () => {
+    const invoke = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, data: '提示词' })
+      .mockResolvedValueOnce({ ok: true, data: null })
+    const api = createApi(invoke)
+    await expect(api.readAgents()).resolves.toBe('提示词')
+    await api.writeAgents('新提示词')
+    expect(invoke).toHaveBeenNthCalledWith(1, IPC.agentsRead)
+    expect(invoke).toHaveBeenNthCalledWith(2, IPC.agentsWrite, '新提示词')
+  })
+
+  it('forwards readManagedFile and writeManagedFile', async () => {
+    const invoke = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, data: '内容' })
+      .mockResolvedValueOnce({ ok: true, data: null })
+    const api = createApi(invoke)
+    await expect(api.readManagedFile('skill', 's')).resolves.toBe('内容')
+    await api.writeManagedFile('skill', 's', '新')
+    expect(invoke).toHaveBeenNthCalledWith(1, IPC.filesRead, 'skill', 's')
+    expect(invoke).toHaveBeenNthCalledWith(2, IPC.filesWrite, 'skill', 's', '新')
+  })
 })

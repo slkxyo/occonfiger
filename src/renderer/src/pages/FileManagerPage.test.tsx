@@ -1,32 +1,23 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { Mock } from 'vitest'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Provider } from '../components/ui/provider'
 import { FileManagerPage } from './FileManagerPage'
 
-type ManagedFile = { name: string; path: string }
-
-type ApiStub = {
-  listManagedFiles: Mock
-  createManagedFile: Mock
-  renameManagedFile: Mock
-  deleteManagedFile: Mock
-  openManagedFile: Mock
-}
-
-const FILES: Record<string, ManagedFile[]> = {
-  agent: [{ name: 'reviewer.md', path: '/cfg/agent/reviewer.md' }],
-  command: [{ name: 'deploy.md', path: '/cfg/command/deploy.md' }],
-  skill: [{ name: 'my-skill', path: '/cfg/skill/my-skill' }]
-}
-
-function stubApi(files: Record<string, ManagedFile[]> = FILES): ApiStub {
+function stubApi(files: { name: string; path: string }[] = [{ name: 'docker-info', path: '/x' }]): {
+  listManagedFiles: ReturnType<typeof vi.fn>
+  readManagedFile: ReturnType<typeof vi.fn>
+  writeManagedFile: ReturnType<typeof vi.fn>
+  createManagedFile: ReturnType<typeof vi.fn>
+  renameManagedFile: ReturnType<typeof vi.fn>
+  deleteManagedFile: ReturnType<typeof vi.fn>
+  openManagedFile: ReturnType<typeof vi.fn>
+} {
   const api = {
-    listManagedFiles: vi
-      .fn()
-      .mockImplementation((kind: string) => Promise.resolve(files[kind] ?? [])),
-    createManagedFile: vi.fn().mockResolvedValue('/cfg/agent/new.md'),
+    listManagedFiles: vi.fn().mockResolvedValue(files),
+    readManagedFile: vi.fn().mockResolvedValue('# SKILL 内容'),
+    writeManagedFile: vi.fn().mockResolvedValue(null),
+    createManagedFile: vi.fn().mockResolvedValue('/x'),
     renameManagedFile: vi.fn().mockResolvedValue(null),
     deleteManagedFile: vi.fn().mockResolvedValue(null),
     openManagedFile: vi.fn().mockResolvedValue(null)
@@ -35,73 +26,58 @@ function stubApi(files: Record<string, ManagedFile[]> = FILES): ApiStub {
   return api
 }
 
+function renderPage(): void {
+  render(
+    <Provider>
+      <FileManagerPage />
+    </Provider>
+  )
+}
+
 describe('FileManagerPage', () => {
   afterEach(() => {
     cleanup()
     vi.unstubAllGlobals()
   })
 
-  it('lists agent files', async () => {
-    stubApi()
-    render(
-      <Provider>
-        <FileManagerPage />
-      </Provider>
-    )
-    expect(await screen.findByText('reviewer.md')).toBeInTheDocument()
+  it('lists only skills', async () => {
+    const api = stubApi()
+    renderPage()
+    expect(await screen.findByText('docker-info')).toBeInTheDocument()
+    expect(api.listManagedFiles).toHaveBeenCalledWith('skill')
   })
 
-  it('creates a file', async () => {
+  it('loads content when a skill is selected', async () => {
     const api = stubApi()
-    render(
-      <Provider>
-        <FileManagerPage />
-      </Provider>
-    )
-    await userEvent.type(await screen.findByLabelText('新建名称'), 'deploy')
+    renderPage()
+    await userEvent.click(await screen.findByRole('button', { name: 'docker-info' }))
+    expect(api.readManagedFile).toHaveBeenCalledWith('skill', 'docker-info')
+    expect(await screen.findByDisplayValue('# SKILL 内容')).toBeInTheDocument()
+  })
+
+  it('saves edited content', async () => {
+    const api = stubApi()
+    renderPage()
+    await userEvent.click(await screen.findByRole('button', { name: 'docker-info' }))
+    const box = await screen.findByLabelText('SKILL 内容')
+    await userEvent.clear(box)
+    await userEvent.type(box, '新内容')
+    await userEvent.click(screen.getByRole('button', { name: '保存' }))
+    expect(api.writeManagedFile).toHaveBeenCalledWith('skill', 'docker-info', '新内容')
+    expect(await screen.findByText('已保存')).toBeInTheDocument()
+  })
+
+  it('creates a skill', async () => {
+    const api = stubApi()
+    renderPage()
+    await userEvent.type(await screen.findByLabelText('新建名称'), 'new-skill')
     await userEvent.click(screen.getByRole('button', { name: '新建' }))
-    expect(api.createManagedFile).toHaveBeenCalledWith('agent', 'deploy')
+    expect(api.createManagedFile).toHaveBeenCalledWith('skill', 'new-skill')
   })
 
-  it('opens a file with the system editor', async () => {
-    const api = stubApi()
-    render(
-      <Provider>
-        <FileManagerPage />
-      </Provider>
-    )
-    await userEvent.click(await screen.findByRole('button', { name: '打开 reviewer.md' }))
-    expect(api.openManagedFile).toHaveBeenCalledWith('agent', 'reviewer.md')
-  })
-
-  it('lists command and skill files when switching tabs', async () => {
-    const api = stubApi()
-    render(
-      <Provider>
-        <FileManagerPage />
-      </Provider>
-    )
-    expect(await screen.findByText('reviewer.md')).toBeInTheDocument()
-    expect(api.listManagedFiles).toHaveBeenCalledTimes(1)
-
-    await userEvent.click(screen.getByRole('tab', { name: 'Commands' }))
-    expect(await screen.findByText('deploy.md')).toBeInTheDocument()
-    expect(api.listManagedFiles).toHaveBeenLastCalledWith('command')
-    await waitFor(() => expect(screen.queryByText('reviewer.md')).not.toBeInTheDocument())
-
-    await userEvent.click(screen.getByRole('tab', { name: 'Skills' }))
-    expect(await screen.findByText('my-skill')).toBeInTheDocument()
-    expect(api.listManagedFiles).toHaveBeenLastCalledWith('skill')
-    await waitFor(() => expect(screen.queryByText('deploy.md')).not.toBeInTheDocument())
-  })
-
-  it('shows empty state when the directory has no files', async () => {
-    stubApi({ agent: [], command: [], skill: [] })
-    render(
-      <Provider>
-        <FileManagerPage />
-      </Provider>
-    )
-    expect(await screen.findByText('该目录下暂无文件。')).toBeInTheDocument()
+  it('shows an empty state when there are no skills', async () => {
+    stubApi([])
+    renderPage()
+    expect(await screen.findByText('暂无 SKILL。')).toBeInTheDocument()
   })
 })

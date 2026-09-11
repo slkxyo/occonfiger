@@ -1,12 +1,15 @@
 import { shell } from 'electron'
 import type { ConfigPaths } from './config/paths'
 import { readConfig, readRaw, writeConfig } from './config/io'
+import { readAgentsFile, writeAgentsFile } from './config/agentsFile'
 import {
   createManagedFile,
   deleteManagedFile,
   listManagedFiles,
   managedFilePath,
+  readManagedFileContent,
   renameManagedFile,
+  writeManagedFileContent,
   type ManagedKind
 } from './config/managedFiles'
 import { deleteCredential, listCredentials, updateCredentialKey } from './auth/io'
@@ -66,6 +69,22 @@ export function registerIpc(ipc: IpcLike, paths: ConfigPaths, deps: Deps = defau
     }
   })
 
+  on(IPC.agentsRead, () => {
+    try {
+      return ok(readAgentsFile(paths.agentsFile))
+    } catch (error) {
+      return fail(error)
+    }
+  })
+  on(IPC.agentsWrite, (content: string) => {
+    try {
+      writeAgentsFile(paths.agentsFile, content)
+      return ok(null)
+    } catch (error) {
+      return fail(error)
+    }
+  })
+
   on(IPC.authList, () => {
     try {
       return ok(listCredentials(paths.authFile))
@@ -93,6 +112,21 @@ export function registerIpc(ipc: IpcLike, paths: ConfigPaths, deps: Deps = defau
   on(IPC.filesList, (kind: ManagedKind) => {
     try {
       return ok(listManagedFiles(paths.configDir, kind))
+    } catch (error) {
+      return fail(error)
+    }
+  })
+  on(IPC.filesRead, (kind: ManagedKind, name: string) => {
+    try {
+      return ok(readManagedFileContent(paths.configDir, kind, name))
+    } catch (error) {
+      return fail(error)
+    }
+  })
+  on(IPC.filesWrite, (kind: ManagedKind, name: string, content: string) => {
+    try {
+      writeManagedFileContent(paths.configDir, kind, name, content)
+      return ok(null)
     } catch (error) {
       return fail(error)
     }
