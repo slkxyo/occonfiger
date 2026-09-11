@@ -22,9 +22,21 @@ describe('normalizeDraft', () => {
     expect(result.references).toEqual({ sdk: { repository: 'a/b', branch: 'main' } })
   })
 
+  it('defaults $schema and preserves an existing one', () => {
+    expect(normalizeDraft({}).$schema).toBe('https://opencode.ai/config.json')
+    expect(normalizeDraft({ $schema: 'custom' }).$schema).toBe('custom')
+  })
+
   it('does not mutate the input', () => {
     const input = { autoupdate: 'true' }
     normalizeDraft(input)
     expect(input.autoupdate).toBe('true')
+  })
+
+  it('does not mutate nested input', () => {
+    const input = { references: { docs: { kind: 'path', path: '../docs' } } }
+    const result = normalizeDraft(input)
+    input.references.docs.path = 'changed'
+    expect(result.references).toEqual({ docs: { path: '../docs' } })
   })
 })
