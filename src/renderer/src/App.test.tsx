@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { Provider } from './components/ui/provider'
 import { App } from './App'
 
@@ -11,6 +12,11 @@ const api = {
 }
 
 describe('App', () => {
+  afterEach(() => {
+    cleanup()
+    vi.unstubAllGlobals()
+  })
+
   it('shows the config path and nav', async () => {
     vi.stubGlobal('api', api)
     render(
@@ -34,5 +40,44 @@ describe('App', () => {
       </Provider>
     )
     expect(await screen.findByRole('alert')).toHaveTextContent('磁盘不可读')
+  })
+
+  it('shows validation errors in an alert and force saves', async () => {
+    const saveConfig = vi
+      .fn()
+      .mockRejectedValueOnce(
+        Object.assign(new Error('校验未通过'), { errors: ['未知顶层键：foo'] })
+      )
+      .mockResolvedValueOnce(['未知顶层键：foo'])
+    vi.stubGlobal('api', { ...api, saveConfig })
+    render(
+      <Provider>
+        <App />
+      </Provider>
+    )
+    await screen.findByText('/home/u/.config/opencode/opencode.jsonc')
+    await userEvent.click(screen.getByRole('button', { name: '保存' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('未知顶层键：foo')
+    await userEvent.click(screen.getByRole('button', { name: '强制保存' }))
+    expect(await screen.findByText('已强制保存，需重启 opencode 生效')).toBeInTheDocument()
+  })
+
+  it('shows normalized JSON in the raw dialog', async () => {
+    vi.stubGlobal('api', {
+      ...api,
+      readConfig: vi.fn().mockResolvedValue({
+        autoupdate: 'true',
+        references: { foo: { kind: 'path', path: '/x' } }
+      })
+    })
+    render(
+      <Provider>
+        <App />
+      </Provider>
+    )
+    await screen.findByText('/home/u/.config/opencode/opencode.jsonc')
+    await userEvent.click(screen.getByRole('button', { name: '查看原始 JSON' }))
+    expect(await screen.findByText(/"autoupdate": true/)).toBeInTheDocument()
+    expect(screen.queryByText(/"kind"/)).not.toBeInTheDocument()
   })
 })

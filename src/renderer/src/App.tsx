@@ -3,6 +3,7 @@ import { Box, Button, Text } from '@chakra-ui/react'
 import { AppLayout } from './components/layout/AppLayout'
 import { RawJsonDialog } from './components/RawJsonDialog'
 import { useConfigStore } from './store/configStore'
+import { normalizeDraft } from './store/normalize'
 import { useSaveConfig } from './hooks/useSaveConfig'
 import { GeneralPage } from './pages/GeneralPage'
 import { ModelPage } from './pages/ModelPage'
@@ -52,7 +53,7 @@ export function App(): React.JSX.Element {
   const [error, setError] = useState('')
   const dirty = useConfigStore((s) => s.dirty)
   const loadConfig = useConfigStore((s) => s.loadConfig)
-  const { save, status } = useSaveConfig()
+  const { save, forceSave, status, saveErrors } = useSaveConfig()
 
   useEffect(() => {
     Promise.all([window.api.readConfig(), window.api.getConfigPath()])
@@ -73,7 +74,7 @@ export function App(): React.JSX.Element {
         dirty={dirty}
         onSave={save}
         onShowRaw={() => {
-          setRawContent(undefined)
+          setRawContent(JSON.stringify(normalizeDraft(useConfigStore.getState().draft), null, 2))
           setRawOpen(true)
         }}
       >
@@ -100,6 +101,32 @@ export function App(): React.JSX.Element {
               }
             >
               查看原始文件内容
+            </Button>
+          </Box>
+        ) : null}
+        {saveErrors.length > 0 ? (
+          <Box
+            role="alert"
+            borderWidth="1px"
+            borderColor="error"
+            borderRadius="card"
+            p="12px"
+            mb="16px"
+          >
+            <Text fontSize="sm" color="error" fontWeight="medium">
+              校验未通过
+            </Text>
+            <Box as="ul" mt="4px" pl="16px">
+              {saveErrors.map((item) => (
+                <Box as="li" key={item}>
+                  <Text fontSize="sm" color="error">
+                    {item}
+                  </Text>
+                </Box>
+              ))}
+            </Box>
+            <Button size="xs" mt="8px" colorPalette="error" onClick={forceSave}>
+              强制保存
             </Button>
           </Box>
         ) : null}
