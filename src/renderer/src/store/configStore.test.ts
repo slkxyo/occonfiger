@@ -29,4 +29,20 @@ describe('configStore', () => {
     useConfigStore.getState().markSaved()
     expect(useConfigStore.getState().dirty).toBe(false)
   })
+
+  it('preserves unknown fields when editing one field', () => {
+    useConfigStore.getState().loadConfig({
+      model: 'a/b',
+      mode: 'build',
+      reference: { alias: { path: './x.md' } },
+      totally_unknown: [1, 2, 3]
+    })
+    useConfigStore.getState().setField(['model'], 'c/d')
+    expect(useConfigStore.getState().draft).toEqual({
+      model: 'c/d',
+      mode: 'build',
+      reference: { alias: { path: './x.md' } },
+      totally_unknown: [1, 2, 3]
+    })
+  })
 })
