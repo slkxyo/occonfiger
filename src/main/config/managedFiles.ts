@@ -79,6 +79,16 @@ export function createManagedFile(dir: string, kind: ManagedKind, name: string):
   return target
 }
 
+function isSameFile(a: string, b: string): boolean {
+  try {
+    const statA = statSync(a)
+    const statB = statSync(b)
+    return statA.dev === statB.dev && statA.ino === statB.ino
+  } catch {
+    return false
+  }
+}
+
 export function renameManagedFile(dir: string, kind: ManagedKind, from: string, to: string): void {
   assertSafeName(from)
   assertSafeName(to)
@@ -89,7 +99,7 @@ export function renameManagedFile(dir: string, kind: ManagedKind, from: string, 
     return
   }
   if (existsSync(target)) {
-    if (target.toLowerCase() === source.toLowerCase()) {
+    if (isSameFile(source, target)) {
       const temp = `${target}.rename-${Date.now()}`
       renameSync(source, temp)
       renameSync(temp, target)

@@ -123,4 +123,25 @@ describe('managedFiles', () => {
     expect(existsSync(join(dir, 'command', 'Deploy.md'))).toBe(true)
     expect(readFileSync(join(dir, 'command', 'Deploy.md'), 'utf8')).toBe('custom content')
   })
+
+  it('rejects renaming onto a distinct same-name-different-case file on case-sensitive FS', () => {
+    const dir = tmpDir()
+    createManagedFile(dir, 'command', 'deploy')
+    const lower = join(dir, 'command', 'deploy.md')
+    const upper = join(dir, 'command', 'Deploy.md')
+    if (existsSync(upper)) {
+      expect(existsSync(lower)).toBe(true)
+      return
+    }
+    writeFileSync(lower, 'lower content', 'utf8')
+    writeFileSync(upper, 'upper content', 'utf8')
+    expect(() => renameManagedFile(dir, 'command', 'deploy', 'Deploy')).toThrow('目标名称已存在')
+    expect(readFileSync(lower, 'utf8')).toBe('lower content')
+    expect(readFileSync(upper, 'utf8')).toBe('upper content')
+    expect(
+      listManagedFiles(dir, 'command')
+        .map((f) => f.name)
+        .sort()
+    ).toEqual(['Deploy.md', 'deploy.md'])
+  })
 })
