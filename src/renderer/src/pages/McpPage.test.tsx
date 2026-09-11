@@ -46,6 +46,24 @@ describe('McpPage', () => {
     expect(screen.getByLabelText('请求头 值 X-Token')).toHaveValue('abc')
   })
 
+  it('toggles oauth for a remote server and writes false when disabled', async () => {
+    render(
+      <Provider>
+        <McpPage />
+      </Provider>
+    )
+    const oauth = screen.getByRole('checkbox', { name: 'OAuth' })
+    expect(oauth).not.toBeChecked()
+    await userEvent.click(oauth)
+    expect(useConfigStore.getState().draft.mcp).toEqual({
+      exa: { type: 'remote', url: 'https://x', oauth: true }
+    })
+    await userEvent.click(oauth)
+    expect(useConfigStore.getState().draft.mcp).toEqual({
+      exa: { type: 'remote', url: 'https://x', oauth: false }
+    })
+  })
+
   it('initializes a new server with local type', async () => {
     useConfigStore.getState().loadConfig({})
     render(

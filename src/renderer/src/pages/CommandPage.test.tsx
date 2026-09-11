@@ -14,5 +14,6 @@ describe('CommandPage', () => {
     )
     expect(screen.getByLabelText('模板')).toBeInTheDocument()
     expect(screen.getByLabelText('描述')).toBeInTheDocument()
+    expect(screen.getByLabelText('模型变体')).toBeInTheDocument()
   })
 })

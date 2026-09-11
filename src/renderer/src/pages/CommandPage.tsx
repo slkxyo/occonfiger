@@ -21,6 +21,7 @@ export function CommandPage(): React.JSX.Element {
               label="模型"
               placeholder="provider/model"
             />
+            <TextField path={['command', command, 'variant']} label="模型变体" />
             <SwitchField path={['command', command, 'subtask']} label="作为子任务" />
           </>
         )}

@@ -26,6 +26,11 @@ function McpCard({ server }: { server: string }): React.JSX.Element {
         <>
           <TextField path={['mcp', server, 'url']} label="URL" />
           <KeyValueEditor path={['mcp', server, 'headers']} label="请求头" valueLabel="值" />
+          <SwitchField
+            path={['mcp', server, 'oauth']}
+            label="OAuth"
+            description="关闭时写入 false，禁用 OAuth 自动检测。"
+          />
         </>
       )}
       <TextField path={['mcp', server, 'timeout']} label="超时（毫秒）" />

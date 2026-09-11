@@ -1,4 +1,4 @@
-import { Button, HStack, IconButton, Input } from '@chakra-ui/react'
+import { Button, HStack, IconButton, Input, Switch } from '@chakra-ui/react'
 import { useState } from 'react'
 import { Field } from '../fields/Field'
 import { useField } from '../fields/useField'
@@ -12,14 +12,17 @@ export function KeyValueEditor(props: {
   label: string
   description?: string
   valueLabel?: string
+  valueKind?: 'string' | 'boolean'
 }): React.JSX.Element {
   const { value, set } = useField(props.path)
   const [newKey, setNewKey] = useState('')
   const [newValue, setNewValue] = useState('')
+  const [newBoolean, setNewBoolean] = useState(false)
+  const booleanValue = props.valueKind === 'boolean'
   const record: Record<string, unknown> = isRecord(value) ? value : {}
   const entries = Object.entries(record)
 
-  const setValue = (key: string, next: string): void => {
+  const setValue = (key: string, next: unknown): void => {
     set({ ...record, [key]: next })
   }
 
@@ -42,9 +45,10 @@ export function KeyValueEditor(props: {
   const addEntry = (): void => {
     const key = newKey.trim()
     if (!key || key in record) return
-    set({ ...record, [key]: newValue })
+    set({ ...record, [key]: booleanValue ? newBoolean : newValue })
     setNewKey('')
     setNewValue('')
+    setNewBoolean(false)
   }
 
   return (
@@ -56,11 +60,18 @@ export function KeyValueEditor(props: {
             defaultValue={key}
             onBlur={(e) => renameKey(key, e.target.value)}
           />
-          <Input
-            aria-label={`${props.label} 值 ${key}`}
-            value={typeof item === 'string' ? item : String(item ?? '')}
-            onChange={(e) => setValue(key, e.target.value)}
-          />
+          {booleanValue ? (
+            <Switch.Root checked={item === true} onCheckedChange={(e) => setValue(key, e.checked)}>
+              <Switch.HiddenInput aria-label={`${props.label} 值 ${key}`} />
+              <Switch.Control />
+            </Switch.Root>
+          ) : (
+            <Input
+              aria-label={`${props.label} 值 ${key}`}
+              value={typeof item === 'string' ? item : String(item ?? '')}
+              onChange={(e) => setValue(key, e.target.value)}
+            />
+          )}
           <IconButton
             aria-label={`删除 ${props.label} ${key}`}
             size="sm"
@@ -79,12 +90,19 @@ export function KeyValueEditor(props: {
           value={newKey}
           onChange={(e) => setNewKey(e.target.value)}
         />
-        <Input
-          aria-label={`${props.label} 新值`}
-          placeholder={props.valueLabel ?? '值'}
-          value={newValue}
-          onChange={(e) => setNewValue(e.target.value)}
-        />
+        {booleanValue ? (
+          <Switch.Root checked={newBoolean} onCheckedChange={(e) => setNewBoolean(e.checked)}>
+            <Switch.HiddenInput aria-label={`${props.label} 新值`} />
+            <Switch.Control />
+          </Switch.Root>
+        ) : (
+          <Input
+            aria-label={`${props.label} 新值`}
+            placeholder={props.valueLabel ?? '值'}
+            value={newValue}
+            onChange={(e) => setNewValue(e.target.value)}
+          />
+        )}
         <Button size="sm" colorPalette="accent" onClick={addEntry}>
           添加{props.label}
         </Button>

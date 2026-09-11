@@ -64,6 +64,12 @@ export function AgentPage(): React.JSX.Element {
               options={['primary', 'subagent', 'all']}
             />
             <TextField path={['agent', agent, 'model']} label="模型" placeholder="provider/model" />
+            <TextField path={['agent', agent, 'variant']} label="模型变体" />
+            <TextField
+              path={['agent', agent, 'color']}
+              label="颜色"
+              placeholder="#4F46E5 或主题色名"
+            />
             <NumberField path={['agent', agent, 'temperature']} label="温度" />
             <NumberField path={['agent', agent, 'top_p']} label="Top P" />
             <NumberField path={['agent', agent, 'steps']} label="最大步数" />

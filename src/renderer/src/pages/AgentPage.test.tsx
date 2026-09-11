@@ -25,6 +25,13 @@ describe('AgentPage', () => {
     expect(screen.getByLabelText('描述')).toBeInTheDocument()
   })
 
+  it('renders variant and color fields', () => {
+    useConfigStore.getState().setField(['agent', 'reviewer'], {})
+    renderPage()
+    expect(screen.getByLabelText('模型变体')).toBeInTheDocument()
+    expect(screen.getByLabelText('颜色')).toBeInTheDocument()
+  })
+
   it('edits an agent permission', async () => {
     useConfigStore.getState().setField(['agent', 'reviewer'], {})
     renderPage()

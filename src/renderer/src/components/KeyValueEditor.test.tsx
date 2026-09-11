@@ -58,4 +58,22 @@ describe('KeyValueEditor', () => {
       s: { environment: { BAR: 'bar' } }
     })
   })
+
+  it('renders boolean entries as switches and toggles them', async () => {
+    useConfigStore.getState().loadConfig({ tools: { read: true, write: false } })
+    wrap(<KeyValueEditor path={['tools']} label="工具" valueKind="boolean" />)
+    const read = screen.getByRole('checkbox', { name: '工具 值 read' })
+    expect(read).toBeChecked()
+    await userEvent.click(read)
+    expect(useConfigStore.getState().draft.tools).toEqual({ read: false, write: false })
+  })
+
+  it('adds a boolean entry', async () => {
+    useConfigStore.getState().loadConfig({ tools: {} })
+    wrap(<KeyValueEditor path={['tools']} label="工具" valueKind="boolean" />)
+    await userEvent.type(screen.getByLabelText('工具 新键'), 'edit')
+    await userEvent.click(screen.getByRole('checkbox', { name: '工具 新值' }))
+    await userEvent.click(screen.getByRole('button', { name: '添加工具' }))
+    expect(useConfigStore.getState().draft.tools).toEqual({ edit: true })
+  })
 })

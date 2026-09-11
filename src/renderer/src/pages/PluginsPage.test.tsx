@@ -31,6 +31,19 @@ describe('PluginsPage', () => {
     expect(useConfigStore.getState().draft.plugin).toEqual(['a', ['pkg', { opt: 1 }], 'b'])
   })
 
+  it('toggles a tool in the boolean key-value editor', async () => {
+    useConfigStore.getState().loadConfig({ tools: { read: false } })
+    render(
+      <Provider>
+        <PluginsPage />
+      </Provider>
+    )
+    const toggle = screen.getByRole('checkbox', { name: '工具 值 read' })
+    expect(toggle).not.toBeChecked()
+    await userEvent.click(toggle)
+    expect(useConfigStore.getState().draft.tools).toEqual({ read: true })
+  })
+
   it('shows read-only hint for object formatter', () => {
     useConfigStore.getState().loadConfig({ formatter: { prettier: {} } })
     render(
