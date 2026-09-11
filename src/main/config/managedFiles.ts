@@ -7,7 +7,7 @@ import {
   statSync,
   writeFileSync
 } from 'node:fs'
-import { join } from 'node:path'
+import { join, normalize } from 'node:path'
 
 export type ManagedKind = 'agent' | 'command' | 'skill'
 export type ManagedFile = { name: string; path: string }
@@ -85,7 +85,16 @@ export function renameManagedFile(dir: string, kind: ManagedKind, from: string, 
   const base = managedDirFor(dir, kind)
   const source = kind === 'skill' ? join(base, from) : join(base, `${from}.md`)
   const target = kind === 'skill' ? join(base, to) : join(base, `${to}.md`)
+  if (normalize(source) === normalize(target)) {
+    return
+  }
   if (existsSync(target)) {
+    if (target.toLowerCase() === source.toLowerCase()) {
+      const temp = `${target}.rename-${Date.now()}`
+      renameSync(source, temp)
+      renameSync(temp, target)
+      return
+    }
     throw new Error(`目标名称已存在：${to}`)
   }
   renameSync(source, target)

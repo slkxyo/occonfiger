@@ -103,4 +103,24 @@ describe('managedFiles', () => {
         .sort()
     ).toEqual(['deploy.md', 'release.md'])
   })
+
+  it('treats renaming to the same name as a no-op', () => {
+    const dir = tmpDir()
+    createManagedFile(dir, 'command', 'deploy')
+    const target = join(dir, 'command', 'deploy.md')
+    writeFileSync(target, 'custom content', 'utf8')
+    expect(() => renameManagedFile(dir, 'command', 'deploy', 'deploy')).not.toThrow()
+    expect(readFileSync(target, 'utf8')).toBe('custom content')
+    expect(listManagedFiles(dir, 'command').map((f) => f.name)).toEqual(['deploy.md'])
+  })
+
+  it('renames a file when only the case differs', () => {
+    const dir = tmpDir()
+    createManagedFile(dir, 'command', 'deploy')
+    const source = join(dir, 'command', 'deploy.md')
+    writeFileSync(source, 'custom content', 'utf8')
+    expect(() => renameManagedFile(dir, 'command', 'deploy', 'Deploy')).not.toThrow()
+    expect(existsSync(join(dir, 'command', 'Deploy.md'))).toBe(true)
+    expect(readFileSync(join(dir, 'command', 'Deploy.md'), 'utf8')).toBe('custom content')
+  })
 })
