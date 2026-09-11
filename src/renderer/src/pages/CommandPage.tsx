@@ -4,11 +4,11 @@ import { SwitchField, TextField } from '../fields/controls'
 
 export function CommandPage(): React.JSX.Element {
   return (
-    <Section title="Commands" description="自定义命令，正文即模板。">
+    <Section title="命令" description="自定义命令，正文即模板。">
       <ListEditor
         path={['command']}
-        addLabel="添加 Command"
-        inputLabel="新 Command 名称"
+        addLabel="添加命令"
+        inputLabel="新命令名称"
         placeholder="deploy"
       >
         {(command) => (
