@@ -1,5 +1,15 @@
 import { createSystem, defaultConfig, defineConfig } from '@chakra-ui/react'
 
+export const accentTokens = {
+  solid: { value: { base: '#4F46E5', _dark: '#818CF8' } },
+  contrast: { value: { base: 'white', _dark: '#0F1115' } },
+  fg: { value: { base: '#4338CA', _dark: '#A5B4FC' } },
+  muted: { value: { base: '#EEF2FF', _dark: '#1E1B4B' } },
+  subtle: { value: { base: '#E0E7FF', _dark: '#312E81' } },
+  emphasized: { value: { base: '#C7D2FE', _dark: '#3730A3' } },
+  focusRing: { value: { base: '#4F46E5', _dark: '#818CF8' } }
+}
+
 const config = defineConfig({
   theme: {
     tokens: {
@@ -15,11 +25,7 @@ const config = defineConfig({
     },
     semanticTokens: {
       colors: {
-        accent: {
-          solid: { value: { base: '#4F46E5', _dark: '#818CF8' } },
-          contrast: { value: { base: 'white', _dark: '#0F1115' } },
-          muted: { value: { base: '#EEF2FF', _dark: '#1E1B4B' } }
-        },
+        accent: accentTokens,
         bg: {
           default: { value: { base: '#FFFFFF', _dark: '#0F1115' } },
           subtle: { value: { base: '#F7F8FA', _dark: '#16181D' } },
