@@ -1,5 +1,6 @@
 import { Section } from '../components/Section'
 import { ListEditor } from '../components/ListEditor'
+import { KeyValueEditor } from '../components/KeyValueEditor'
 import { SelectField, SwitchField, TagsField, TextField } from '../fields/controls'
 import { useField } from '../fields/useField'
 
@@ -19,16 +20,12 @@ function McpCard({ server }: { server: string }): React.JSX.Element {
         <>
           <TagsField path={['mcp', server, 'command']} label="命令" placeholder="回车添加参数" />
           <TextField path={['mcp', server, 'cwd']} label="工作目录" />
-          <TagsField
-            path={['mcp', server, 'environment']}
-            label="环境变量"
-            placeholder="KEY=VALUE 回车添加"
-          />
+          <KeyValueEditor path={['mcp', server, 'environment']} label="环境变量" valueLabel="值" />
         </>
       ) : (
         <>
           <TextField path={['mcp', server, 'url']} label="URL" />
-          <TextField path={['mcp', server, 'headers', 'Authorization']} label="Authorization 头" />
+          <KeyValueEditor path={['mcp', server, 'headers']} label="请求头" valueLabel="值" />
         </>
       )}
       <TextField path={['mcp', server, 'timeout']} label="超时（毫秒）" />

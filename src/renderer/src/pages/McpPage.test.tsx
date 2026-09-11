@@ -22,6 +22,30 @@ describe('McpPage', () => {
     expect(screen.queryByLabelText('命令')).not.toBeInTheDocument()
   })
 
+  it('renders local environment as a key-value editor', () => {
+    useConfigStore
+      .getState()
+      .loadConfig({ mcp: { s: { type: 'local', environment: { FOO: 'bar' } } } })
+    render(
+      <Provider>
+        <McpPage />
+      </Provider>
+    )
+    expect(screen.getByLabelText('环境变量 值 FOO')).toHaveValue('bar')
+  })
+
+  it('renders remote headers as a key-value editor', () => {
+    useConfigStore.getState().loadConfig({
+      mcp: { exa: { type: 'remote', url: 'https://x', headers: { 'X-Token': 'abc' } } }
+    })
+    render(
+      <Provider>
+        <McpPage />
+      </Provider>
+    )
+    expect(screen.getByLabelText('请求头 值 X-Token')).toHaveValue('abc')
+  })
+
   it('initializes a new server with local type', async () => {
     useConfigStore.getState().loadConfig({})
     render(
