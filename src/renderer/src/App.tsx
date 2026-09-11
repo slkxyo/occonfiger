@@ -1,7 +1,19 @@
 import { useEffect, useState } from 'react'
-import { Box, Text } from '@chakra-ui/react'
+import { Box, Button, Text } from '@chakra-ui/react'
 import { AppLayout } from './components/layout/AppLayout'
+import { RawJsonDialog } from './components/RawJsonDialog'
 import { useConfigStore } from './store/configStore'
+import { useSaveConfig } from './hooks/useSaveConfig'
+import { GeneralPage } from './pages/GeneralPage'
+import { ModelPage } from './pages/ModelPage'
+import { ProviderPage } from './pages/ProviderPage'
+import { McpPage } from './pages/McpPage'
+import { PermissionPage } from './pages/PermissionPage'
+import { AgentPage } from './pages/AgentPage'
+import { CommandPage } from './pages/CommandPage'
+import { SkillsPage } from './pages/SkillsPage'
+import { PluginsPage } from './pages/PluginsPage'
+import { AdvancedPage } from './pages/AdvancedPage'
 
 const NAV = [
   { id: 'general', label: '常规' },
@@ -18,54 +30,97 @@ const NAV = [
   { id: 'files', label: '文件管理' }
 ]
 
+function CurrentPage({ id }: { id: string }): React.JSX.Element {
+  if (id === 'general') return <GeneralPage />
+  if (id === 'model') return <ModelPage />
+  if (id === 'provider') return <ProviderPage />
+  if (id === 'mcp') return <McpPage />
+  if (id === 'permission') return <PermissionPage />
+  if (id === 'agent') return <AgentPage />
+  if (id === 'command') return <CommandPage />
+  if (id === 'skills') return <SkillsPage />
+  if (id === 'plugins') return <PluginsPage />
+  if (id === 'advanced') return <AdvancedPage />
+  return <Text color="fg.muted">该页面将在 Plan 3 实现。</Text>
+}
+
 export function App(): React.JSX.Element {
   const [active, setActive] = useState('general')
   const [configPath, setConfigPath] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const draft = useConfigStore((s) => s.draft)
+  const [rawOpen, setRawOpen] = useState(false)
+  const [rawContent, setRawContent] = useState<string | undefined>(undefined)
+  const [error, setError] = useState('')
   const dirty = useConfigStore((s) => s.dirty)
   const loadConfig = useConfigStore((s) => s.loadConfig)
+  const { save, status } = useSaveConfig()
 
   useEffect(() => {
     Promise.all([window.api.readConfig(), window.api.getConfigPath()])
       .then(([config, path]) => {
         loadConfig(config)
         setConfigPath(path)
-        setError(null)
       })
-      .catch((cause: unknown) => {
-        setError(cause instanceof Error ? cause.message : String(cause))
-      })
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
   }, [loadConfig])
 
   return (
-    <AppLayout
-      navItems={NAV}
-      active={active}
-      onNavigate={setActive}
-      configPath={configPath}
-      dirty={dirty}
-    >
-      {error ? (
-        <Box
-          role="alert"
-          mb="16px"
-          p="12px 16px"
-          borderWidth="1px"
-          borderColor="error"
-          borderRadius="control"
-          color="error"
-          bg="bg.subtle"
-        >
-          <Text fontSize="sm">配置读取失败：{error}</Text>
-        </Box>
-      ) : null}
-      <Box>
-        <Text fontSize="sm" color="fg.muted">
-          当前页：{active}，字段数：{Object.keys(draft).length}
-        </Text>
-      </Box>
-    </AppLayout>
+    <>
+      <AppLayout
+        navItems={NAV}
+        active={active}
+        onNavigate={setActive}
+        configPath={configPath}
+        dirty={dirty}
+        onSave={save}
+        onShowRaw={() => {
+          setRawContent(undefined)
+          setRawOpen(true)
+        }}
+      >
+        {error ? (
+          <Box
+            role="alert"
+            borderWidth="1px"
+            borderColor="error"
+            borderRadius="card"
+            p="12px"
+            mb="16px"
+          >
+            <Text fontSize="sm" color="error">
+              {error}
+            </Text>
+            <Button
+              size="xs"
+              mt="8px"
+              onClick={() =>
+                window.api.getRawContent().then((content) => {
+                  setRawContent(content ?? '')
+                  setRawOpen(true)
+                })
+              }
+            >
+              查看原始文件内容
+            </Button>
+          </Box>
+        ) : null}
+        <CurrentPage id={active} />
+        {status ? (
+          <Box mt="16px">
+            <Text fontSize="sm" color="fg.muted">
+              {status}
+            </Text>
+          </Box>
+        ) : null}
+      </AppLayout>
+      <RawJsonDialog
+        open={rawOpen}
+        onClose={() => {
+          setRawOpen(false)
+          setRawContent(undefined)
+        }}
+        content={rawContent}
+      />
+    </>
   )
 }
 
