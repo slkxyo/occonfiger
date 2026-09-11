@@ -12,6 +12,12 @@ import { join } from 'node:path'
 export type ManagedKind = 'agent' | 'command' | 'skill'
 export type ManagedFile = { name: string; path: string }
 
+function assertSafeName(name: string): void {
+  if (name === '' || name === '.' || name === '..' || name.includes('/') || name.includes('\\')) {
+    throw new Error(`非法的名称：${JSON.stringify(name)}`)
+  }
+}
+
 export function managedDirFor(configDir: string, kind: ManagedKind): string {
   return join(configDir, kind)
 }
@@ -46,6 +52,7 @@ function templates(kind: ManagedKind, name: string): { file: string; content: st
 }
 
 export function createManagedFile(dir: string, kind: ManagedKind, name: string): string {
+  assertSafeName(name)
   const base = managedDirFor(dir, kind)
   const { file, content } = templates(kind, name)
   const target = join(base, file)
@@ -55,6 +62,8 @@ export function createManagedFile(dir: string, kind: ManagedKind, name: string):
 }
 
 export function renameManagedFile(dir: string, kind: ManagedKind, from: string, to: string): void {
+  assertSafeName(from)
+  assertSafeName(to)
   const base = managedDirFor(dir, kind)
   if (kind === 'skill') {
     renameSync(join(base, from), join(base, to))
@@ -64,6 +73,7 @@ export function renameManagedFile(dir: string, kind: ManagedKind, from: string, 
 }
 
 export function deleteManagedFile(dir: string, kind: ManagedKind, name: string): void {
+  assertSafeName(name)
   const base = managedDirFor(dir, kind)
   const target = kind === 'skill' ? join(base, name) : join(base, `${name}.md`)
   rmSync(target, { recursive: kind === 'skill', force: true })

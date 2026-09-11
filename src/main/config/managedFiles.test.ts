@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'node:fs'
+import { existsSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -42,5 +42,23 @@ describe('managedFiles', () => {
     const dir = tmpDir()
     createManagedFile(dir, 'skill', 'my-skill')
     expect(listManagedFiles(dir, 'skill').map((f) => f.name)).toEqual(['my-skill'])
+  })
+
+  it('rejects unsafe names in create and writes nothing', () => {
+    const dir = tmpDir()
+    for (const name of ['../evil', 'a/b', '..', '', '.', 'a\\b']) {
+      expect(() => createManagedFile(dir, 'command', name)).toThrow()
+    }
+    expect(listManagedFiles(dir, 'command')).toEqual([])
+    expect(existsSync(join(dir, 'evil.md'))).toBe(false)
+  })
+
+  it('rejects unsafe names in rename and delete', () => {
+    const dir = tmpDir()
+    createManagedFile(dir, 'command', 'ok')
+    expect(() => renameManagedFile(dir, 'command', 'ok', '../x')).toThrow()
+    expect(() => renameManagedFile(dir, 'command', '../x', 'ok')).toThrow()
+    expect(() => deleteManagedFile(dir, 'command', '../x')).toThrow()
+    expect(listManagedFiles(dir, 'command').map((f) => f.name)).toEqual(['ok.md'])
   })
 })
