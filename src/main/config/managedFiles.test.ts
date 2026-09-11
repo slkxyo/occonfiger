@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, rmSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -75,5 +75,32 @@ describe('managedFiles', () => {
     expect(() => renameManagedFile(dir, 'command', '../x', 'ok')).toThrow()
     expect(() => deleteManagedFile(dir, 'command', '../x')).toThrow()
     expect(listManagedFiles(dir, 'command').map((f) => f.name)).toEqual(['ok.md'])
+  })
+
+  it('rejects creating a file that already exists and keeps original content', () => {
+    const dir = tmpDir()
+    createManagedFile(dir, 'command', 'deploy')
+    const target = join(dir, 'command', 'deploy.md')
+    writeFileSync(target, 'custom content', 'utf8')
+    expect(() => createManagedFile(dir, 'command', 'deploy')).toThrow('同名文件已存在')
+    expect(readFileSync(target, 'utf8')).toBe('custom content')
+  })
+
+  it('rejects renaming onto an existing file and keeps both files', () => {
+    const dir = tmpDir()
+    createManagedFile(dir, 'command', 'deploy')
+    createManagedFile(dir, 'command', 'release')
+    const source = join(dir, 'command', 'deploy.md')
+    const target = join(dir, 'command', 'release.md')
+    const sourceContent = readFileSync(source, 'utf8')
+    const targetContent = readFileSync(target, 'utf8')
+    expect(() => renameManagedFile(dir, 'command', 'deploy', 'release')).toThrow('目标名称已存在')
+    expect(readFileSync(source, 'utf8')).toBe(sourceContent)
+    expect(readFileSync(target, 'utf8')).toBe(targetContent)
+    expect(
+      listManagedFiles(dir, 'command')
+        .map((f) => f.name)
+        .sort()
+    ).toEqual(['deploy.md', 'release.md'])
   })
 })

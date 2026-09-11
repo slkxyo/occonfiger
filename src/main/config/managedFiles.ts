@@ -71,8 +71,11 @@ export function createManagedFile(dir: string, kind: ManagedKind, name: string):
   const base = managedDirFor(dir, kind)
   const { file, content } = templates(kind, name)
   const target = join(base, file)
+  if (existsSync(target)) {
+    throw new Error(`同名文件已存在：${name}`)
+  }
   mkdirSync(join(target, '..'), { recursive: true })
-  writeFileSync(target, content, 'utf8')
+  writeFileSync(target, content, { encoding: 'utf8', flag: 'wx' })
   return target
 }
 
@@ -80,11 +83,12 @@ export function renameManagedFile(dir: string, kind: ManagedKind, from: string, 
   assertSafeName(from)
   assertSafeName(to)
   const base = managedDirFor(dir, kind)
-  if (kind === 'skill') {
-    renameSync(join(base, from), join(base, to))
-    return
+  const source = kind === 'skill' ? join(base, from) : join(base, `${from}.md`)
+  const target = kind === 'skill' ? join(base, to) : join(base, `${to}.md`)
+  if (existsSync(target)) {
+    throw new Error(`目标名称已存在：${to}`)
   }
-  renameSync(join(base, `${from}.md`), join(base, `${to}.md`))
+  renameSync(source, target)
 }
 
 export function deleteManagedFile(dir: string, kind: ManagedKind, name: string): void {
