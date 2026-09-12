@@ -13,7 +13,7 @@ Manage MCP servers, plugins, provider credentials, skills, global prompts and pe
 <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
 <img src="https://img.shields.io/badge/Chakra_UI-3-319795?style=flat-square&logo=chakraui&logoColor=white" alt="Chakra UI" />
 <img src="https://img.shields.io/badge/Platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" />
-<img src="https://img.shields.io/badge/Version-1.0.0-2F80ED?style=flat-square" alt="Version" />
+<img src="https://img.shields.io/badge/Version-1.1.0-2F80ED?style=flat-square" alt="Version" />
 
 </div>
 
@@ -70,7 +70,7 @@ OCConfiger reads and writes your local opencode configuration files directly. Th
 
 ## Installation
 
-Download `OCConfiger-1.0.0.dmg` from [Releases](https://github.com/slkxyo/occonfiger/releases), open it and drag the app into **Applications**.
+Download `OCConfiger-1.1.0.dmg` from [Releases](https://github.com/slkxyo/occonfiger/releases), open it and drag the app into **Applications**.
 
 The app is not signed, so on first launch use **Right click → Open**, or run:
 

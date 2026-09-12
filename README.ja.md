@@ -13,7 +13,7 @@ MCP サーバー、プラグイン、プロバイダー認証情報、SKILL、�
 <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
 <img src="https://img.shields.io/badge/Chakra_UI-3-319795?style=flat-square&logo=chakraui&logoColor=white" alt="Chakra UI" />
 <img src="https://img.shields.io/badge/Platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" />
-<img src="https://img.shields.io/badge/Version-1.0.0-2F80ED?style=flat-square" alt="Version" />
+<img src="https://img.shields.io/badge/Version-1.1.0-2F80ED?style=flat-square" alt="Version" />
 
 </div>
 
@@ -70,7 +70,7 @@ OCConfiger はローカルの opencode 設定ファイルを直接読み書き�
 
 ## インストール
 
-[Releases](https://github.com/slkxyo/occonfiger/releases) から `OCConfiger-1.0.0.dmg` をダウンロードし、開いてアプリを「アプリケーション」にドラッグします。
+[Releases](https://github.com/slkxyo/occonfiger/releases) から `OCConfiger-1.1.0.dmg` をダウンロードし、開いてアプリを「アプリケーション」にドラッグします。
 
 アプリは署名されていないため、初回起動時は**右クリック → 開く**を選択するか、以下を実行してください：
 

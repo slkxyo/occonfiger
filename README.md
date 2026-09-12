@@ -13,7 +13,7 @@
 <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
 <img src="https://img.shields.io/badge/Chakra_UI-3-319795?style=flat-square&logo=chakraui&logoColor=white" alt="Chakra UI" />
 <img src="https://img.shields.io/badge/Platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" />
-<img src="https://img.shields.io/badge/Version-1.0.0-2F80ED?style=flat-square" alt="Version" />
+<img src="https://img.shields.io/badge/Version-1.1.0-2F80ED?style=flat-square" alt="Version" />
 
 </div>
 
@@ -70,7 +70,7 @@ OCConfiger 直接读写本地 opencode 配置文件，不引入中间层或云�
 
 ## 安装
 
-从 [Releases](https://github.com/slkxyo/occonfiger/releases) 下载 `OCConfiger-1.0.0.dmg`，打开后将应用拖入「应用程序」。
+从 [Releases](https://github.com/slkxyo/occonfiger/releases) 下载 `OCConfiger-1.1.0.dmg`，打开后将应用拖入「应用程序」。
 
 应用未签名，首次打开请**右键 → 打开**；或在终端执行：
 
