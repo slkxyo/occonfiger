@@ -1,6 +1,7 @@
-import { Box, Button, Flex, HStack, Input, Text, Textarea } from '@chakra-ui/react'
+import { Box, Button, Flex, HStack, Text, Textarea } from '@chakra-ui/react'
 import { useCallback, useEffect, useState } from 'react'
 import { Section } from '../components/Section'
+import { enterStyle } from '../components/motion'
 
 type ManagedFile = { name: string; path: string }
 
@@ -13,14 +14,13 @@ export function FileManagerPage(): React.JSX.Element {
   const [selected, setSelected] = useState('')
   const [content, setContent] = useState('')
   const [saved, setSaved] = useState('')
-  const [name, setName] = useState('')
   const [status, setStatus] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
   const reload = useCallback((): Promise<void> => {
     return window.api
-      .listManagedFiles('skill')
+      .listManagedFiles()
       .then((next) => {
         setFiles(next)
         setError('')
@@ -37,7 +37,7 @@ export function FileManagerPage(): React.JSX.Element {
     setStatus('')
     setError('')
     window.api
-      .readManagedFile('skill', skill)
+      .readManagedFile(skill)
       .then((text) => {
         setContent(text)
         setSaved(text)
@@ -53,7 +53,7 @@ export function FileManagerPage(): React.JSX.Element {
     setStatus('')
     setError('')
     window.api
-      .writeManagedFile('skill', selected, content)
+      .writeManagedFile(selected, content)
       .then(() => {
         setSaved(content)
         setStatus('已保存')
@@ -78,31 +78,6 @@ export function FileManagerPage(): React.JSX.Element {
           </Text>
         </Box>
       ) : null}
-      <HStack mb="16px">
-        <Input
-          aria-label="新建名称"
-          value={name}
-          placeholder="新 SKILL 名称"
-          onChange={(e) => setName(e.target.value)}
-        />
-        <Button
-          size="sm"
-          colorPalette="accent"
-          onClick={() => {
-            const next = name.trim()
-            if (!next) return
-            window.api
-              .createManagedFile('skill', next)
-              .then(() => {
-                setName('')
-                reload()
-              })
-              .catch((e: unknown) => setError(toMessage(e)))
-          }}
-        >
-          新建
-        </Button>
-      </HStack>
       <Flex gap="16px" align="stretch">
         <Box w="220px" flexShrink={0} maxH="60vh" overflowY="auto">
           {files.length === 0 ? (
@@ -110,9 +85,11 @@ export function FileManagerPage(): React.JSX.Element {
               暂无 SKILL。
             </Text>
           ) : (
-            files.map((file) => (
+            files.map((file, index) => (
               <Button
                 key={file.path}
+                className="oc-enter"
+                style={enterStyle(index)}
                 variant={selected === file.name ? 'subtle' : 'ghost'}
                 colorPalette={selected === file.name ? 'accent' : undefined}
                 justifyContent="flex-start"
@@ -140,7 +117,7 @@ export function FileManagerPage(): React.JSX.Element {
                     variant="ghost"
                     aria-label={`打开 ${selected}`}
                     onClick={() => {
-                      window.api.openManagedFile('skill', selected).catch((e: unknown) => {
+                      window.api.openManagedFile(selected).catch((e: unknown) => {
                         setError(toMessage(e))
                       })
                     }}
@@ -150,32 +127,12 @@ export function FileManagerPage(): React.JSX.Element {
                   <Button
                     size="xs"
                     variant="ghost"
-                    aria-label={`重命名 ${selected}`}
-                    onClick={() => {
-                      const next = window.prompt('新名称', selected)
-                      if (!next || next === selected) return
-                      window.api
-                        .renameManagedFile('skill', selected, next)
-                        .then(() => {
-                          setSelected(next)
-                          reload()
-                        })
-                        .catch((e: unknown) => {
-                          setError(toMessage(e))
-                        })
-                    }}
-                  >
-                    重命名
-                  </Button>
-                  <Button
-                    size="xs"
-                    variant="ghost"
                     colorPalette="error"
                     aria-label={`删除 ${selected}`}
                     onClick={() => {
                       if (!window.confirm(`确定删除 ${selected} 吗？`)) return
                       window.api
-                        .deleteManagedFile('skill', selected)
+                        .deleteManagedFile(selected)
                         .then(() => {
                           setSelected('')
                           setContent('')

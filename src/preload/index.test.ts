@@ -28,11 +28,11 @@ describe('createApi', () => {
     })
   })
 
-  it('forwards openManagedFile kind and name', async () => {
+  it('forwards openManagedFile name', async () => {
     const invoke = vi.fn().mockResolvedValue({ ok: true, data: null })
     const api = createApi(invoke)
-    await api.openManagedFile('skill', 'my-skill')
-    expect(invoke).toHaveBeenCalledWith(IPC.filesOpen, 'skill', 'my-skill')
+    await api.openManagedFile('my-skill')
+    expect(invoke).toHaveBeenCalledWith(IPC.filesOpen, 'my-skill')
   })
 
   it('forwards readAgents and writeAgents', async () => {
@@ -53,9 +53,24 @@ describe('createApi', () => {
       .mockResolvedValueOnce({ ok: true, data: '内容' })
       .mockResolvedValueOnce({ ok: true, data: null })
     const api = createApi(invoke)
-    await expect(api.readManagedFile('skill', 's')).resolves.toBe('内容')
-    await api.writeManagedFile('skill', 's', '新')
-    expect(invoke).toHaveBeenNthCalledWith(1, IPC.filesRead, 'skill', 's')
-    expect(invoke).toHaveBeenNthCalledWith(2, IPC.filesWrite, 'skill', 's', '新')
+    await expect(api.readManagedFile('s')).resolves.toBe('内容')
+    await api.writeManagedFile('s', '新')
+    expect(invoke).toHaveBeenNthCalledWith(1, IPC.filesRead, 's')
+    expect(invoke).toHaveBeenNthCalledWith(2, IPC.filesWrite, 's', '新')
+  })
+
+  it('forwards plugin management calls', async () => {
+    const invoke = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, data: [{ name: 'a', enabled: true, spec: 'a' }] })
+      .mockResolvedValueOnce({ ok: true, data: null })
+      .mockResolvedValueOnce({ ok: true, data: null })
+    const api = createApi(invoke)
+    await expect(api.listPlugins()).resolves.toEqual([{ name: 'a', enabled: true, spec: 'a' }])
+    await api.setPluginEnabled('a', false)
+    await api.deletePlugin('a')
+    expect(invoke).toHaveBeenNthCalledWith(1, IPC.pluginsList)
+    expect(invoke).toHaveBeenNthCalledWith(2, IPC.pluginsSetEnabled, 'a', false)
+    expect(invoke).toHaveBeenNthCalledWith(3, IPC.pluginsDelete, 'a')
   })
 })

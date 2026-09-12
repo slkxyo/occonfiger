@@ -14,13 +14,14 @@ export interface Api {
   listCredentials: () => Promise<{ provider: string; type: string; keyTail?: string }[]>
   updateCredentialKey: (provider: string, key: string) => Promise<null>
   deleteCredential: (provider: string) => Promise<null>
-  listManagedFiles: (kind: string) => Promise<{ name: string; path: string }[]>
-  readManagedFile: (kind: string, name: string) => Promise<string>
-  writeManagedFile: (kind: string, name: string, content: string) => Promise<null>
-  createManagedFile: (kind: string, name: string) => Promise<string>
-  renameManagedFile: (kind: string, from: string, to: string) => Promise<null>
-  deleteManagedFile: (kind: string, name: string) => Promise<null>
-  openManagedFile: (kind: string, name: string) => Promise<null>
+  listManagedFiles: () => Promise<{ name: string; path: string }[]>
+  readManagedFile: (name: string) => Promise<string>
+  writeManagedFile: (name: string, content: string) => Promise<null>
+  deleteManagedFile: (name: string) => Promise<null>
+  openManagedFile: (name: string) => Promise<null>
+  listPlugins: () => Promise<{ name: string; enabled: boolean; spec: unknown }[]>
+  setPluginEnabled: (name: string, enabled: boolean) => Promise<null>
+  deletePlugin: (name: string) => Promise<null>
 }
 
 function toError(response: IpcResponse<unknown> | null | undefined): IpcError {
@@ -51,18 +52,16 @@ export function createApi(invoke: Invoke): Api {
     updateCredentialKey: (provider: string, key: string) =>
       unwrap<null>(invoke, IPC.authUpdateKey, provider, key),
     deleteCredential: (provider: string) => unwrap<null>(invoke, IPC.authDelete, provider),
-    listManagedFiles: (kind: string) =>
-      unwrap<{ name: string; path: string }[]>(invoke, IPC.filesList, kind),
-    readManagedFile: (kind: string, name: string) =>
-      unwrap<string>(invoke, IPC.filesRead, kind, name),
-    writeManagedFile: (kind: string, name: string, content: string) =>
-      unwrap<null>(invoke, IPC.filesWrite, kind, name, content),
-    createManagedFile: (kind: string, name: string) =>
-      unwrap<string>(invoke, IPC.filesCreate, kind, name),
-    renameManagedFile: (kind: string, from: string, to: string) =>
-      unwrap<null>(invoke, IPC.filesRename, kind, from, to),
-    deleteManagedFile: (kind: string, name: string) =>
-      unwrap<null>(invoke, IPC.filesDelete, kind, name),
-    openManagedFile: (kind: string, name: string) => unwrap<null>(invoke, IPC.filesOpen, kind, name)
+    listManagedFiles: () => unwrap<{ name: string; path: string }[]>(invoke, IPC.filesList),
+    readManagedFile: (name: string) => unwrap<string>(invoke, IPC.filesRead, name),
+    writeManagedFile: (name: string, content: string) =>
+      unwrap<null>(invoke, IPC.filesWrite, name, content),
+    deleteManagedFile: (name: string) => unwrap<null>(invoke, IPC.filesDelete, name),
+    openManagedFile: (name: string) => unwrap<null>(invoke, IPC.filesOpen, name),
+    listPlugins: () =>
+      unwrap<{ name: string; enabled: boolean; spec: unknown }[]>(invoke, IPC.pluginsList),
+    setPluginEnabled: (name: string, enabled: boolean) =>
+      unwrap<null>(invoke, IPC.pluginsSetEnabled, name, enabled),
+    deletePlugin: (name: string) => unwrap<null>(invoke, IPC.pluginsDelete, name)
   }
 }

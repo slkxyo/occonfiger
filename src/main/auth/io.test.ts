@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -42,5 +42,19 @@ describe('auth io', () => {
 
   it('returns empty list when file missing', () => {
     expect(listCredentials(tmpFile())).toEqual([])
+  })
+
+  it('throws on a corrupted auth file instead of wiping it', () => {
+    const file = tmpFile()
+    writeFileSync(file, 'not json')
+    expect(() => listCredentials(file)).toThrow()
+    expect(() => deleteCredential(file, 'a')).toThrow()
+    expect(readFileSync(file, 'utf8')).toBe('not json')
+  })
+
+  it('refuses to delete a missing provider', () => {
+    const file = tmpFile()
+    writeFileSync(file, JSON.stringify({ a: { type: 'api', key: '1' } }))
+    expect(() => deleteCredential(file, 'missing')).toThrow('不存在')
   })
 })

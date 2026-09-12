@@ -6,45 +6,57 @@ describe('configStore', () => {
     useConfigStore.getState().loadConfig({})
   })
 
-  it('loads and clears dirty', () => {
+  it('loads a draft and resets save state', () => {
     useConfigStore.getState().loadConfig({ model: 'a/b' })
-    expect(useConfigStore.getState().draft.model).toBe('a/b')
-    expect(useConfigStore.getState().dirty).toBe(false)
+    const state = useConfigStore.getState()
+    expect(state.draft.model).toBe('a/b')
+    expect(state.revision).toBe(0)
+    expect(state.saveState).toBe('idle')
+    expect(state.saveErrors).toEqual([])
   })
 
-  it('sets a nested field and marks dirty', () => {
+  it('sets a nested field and bumps revision with debounce delay', () => {
     useConfigStore.getState().setField(['permission', 'edit'], 'deny')
-    expect(useConfigStore.getState().draft).toEqual({ permission: { edit: 'deny' } })
-    expect(useConfigStore.getState().dirty).toBe(true)
+    const state = useConfigStore.getState()
+    expect(state.draft).toEqual({ permission: { edit: 'deny' } })
+    expect(state.revision).toBe(1)
+    expect(state.saveDelay).toBe(600)
+  })
+
+  it('marks immediate changes with zero delay', () => {
+    useConfigStore.getState().setField(['model'], 'a/b', { immediate: true })
+    expect(useConfigStore.getState().saveDelay).toBe(0)
+    useConfigStore.getState().setField(['model'], 'c/d')
+    expect(useConfigStore.getState().saveDelay).toBe(600)
   })
 
   it('deletes a field and cleans empty parents', () => {
     useConfigStore.getState().setField(['a', 'b'], 1)
-    useConfigStore.getState().deleteField(['a', 'b'])
+    useConfigStore.getState().deleteField(['a', 'b'], { immediate: true })
     expect(useConfigStore.getState().draft).toEqual({})
   })
 
-  it('markSaved resets dirty', () => {
-    useConfigStore.getState().setField(['model'], 'x')
+  it('tracks the save lifecycle', () => {
+    useConfigStore.getState().beginSave()
+    expect(useConfigStore.getState().saveState).toBe('saving')
+    useConfigStore.getState().markSaveError(['坏配置'])
+    expect(useConfigStore.getState().saveState).toBe('error')
+    expect(useConfigStore.getState().saveErrors).toEqual(['坏配置'])
     useConfigStore.getState().markSaved()
-    expect(useConfigStore.getState().dirty).toBe(false)
+    expect(useConfigStore.getState().saveState).toBe('saved')
+    expect(useConfigStore.getState().saveErrors).toEqual([])
   })
 
-  it('discards changes back to the loaded snapshot', () => {
-    useConfigStore.getState().loadConfig({ model: 'a/b' })
-    useConfigStore.getState().setField(['model'], 'c/d')
-    expect(useConfigStore.getState().dirty).toBe(true)
-    useConfigStore.getState().discardChanges()
-    expect(useConfigStore.getState().draft).toEqual({ model: 'a/b' })
-    expect(useConfigStore.getState().dirty).toBe(false)
-  })
-
-  it('treats the saved draft as the new baseline', () => {
-    useConfigStore.getState().loadConfig({ model: 'a/b' })
-    useConfigStore.getState().setField(['model'], 'c/d')
+  it('flushes only when there are unsaved changes', () => {
+    useConfigStore.getState().setField(['model'], 'a/b', { immediate: true })
+    const before = useConfigStore.getState().revision
+    useConfigStore.getState().flush()
+    expect(useConfigStore.getState().revision).toBe(before + 1)
+    expect(useConfigStore.getState().saveDelay).toBe(0)
     useConfigStore.getState().markSaved()
-    useConfigStore.getState().discardChanges()
-    expect(useConfigStore.getState().draft).toEqual({ model: 'c/d' })
+    const saved = useConfigStore.getState().revision
+    useConfigStore.getState().flush()
+    expect(useConfigStore.getState().revision).toBe(saved)
   })
 
   it('preserves unknown fields when editing one field', () => {

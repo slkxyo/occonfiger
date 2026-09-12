@@ -3,16 +3,14 @@ import type { ConfigPaths } from './config/paths'
 import { readConfig, readRaw, writeConfig } from './config/io'
 import { readAgentsFile, writeAgentsFile } from './config/agentsFile'
 import {
-  createManagedFile,
   deleteManagedFile,
   listManagedFiles,
-  managedFilePath,
   readManagedFileContent,
-  renameManagedFile,
-  writeManagedFileContent,
-  type ManagedKind
+  skillContentPath,
+  writeManagedFileContent
 } from './config/managedFiles'
 import { deleteCredential, listCredentials, updateCredentialKey } from './auth/io'
+import { deletePlugin, listPlugins, setPluginEnabled } from './config/plugins'
 import { validateConfig } from './schema/validate'
 import { IPC } from '../shared/ipc-channels'
 
@@ -109,56 +107,64 @@ export function registerIpc(ipc: IpcLike, paths: ConfigPaths, deps: Deps = defau
     }
   })
 
-  on(IPC.filesList, (kind: ManagedKind) => {
+  on(IPC.filesList, () => {
     try {
-      return ok(listManagedFiles(paths.configDir, kind))
+      return ok(listManagedFiles(paths.configDir))
     } catch (error) {
       return fail(error)
     }
   })
-  on(IPC.filesRead, (kind: ManagedKind, name: string) => {
+  on(IPC.filesRead, (name: string) => {
     try {
-      return ok(readManagedFileContent(paths.configDir, kind, name))
+      return ok(readManagedFileContent(paths.configDir, name))
     } catch (error) {
       return fail(error)
     }
   })
-  on(IPC.filesWrite, (kind: ManagedKind, name: string, content: string) => {
+  on(IPC.filesWrite, (name: string, content: string) => {
     try {
-      writeManagedFileContent(paths.configDir, kind, name, content)
+      writeManagedFileContent(paths.configDir, name, content)
       return ok(null)
     } catch (error) {
       return fail(error)
     }
   })
-  on(IPC.filesCreate, (kind: ManagedKind, name: string) => {
+  on(IPC.filesDelete, (name: string) => {
     try {
-      return ok(createManagedFile(paths.configDir, kind, name))
-    } catch (error) {
-      return fail(error)
-    }
-  })
-  on(IPC.filesRename, (kind: ManagedKind, from: string, to: string) => {
-    try {
-      renameManagedFile(paths.configDir, kind, from, to)
+      deleteManagedFile(paths.configDir, name)
       return ok(null)
     } catch (error) {
       return fail(error)
     }
   })
-  on(IPC.filesDelete, (kind: ManagedKind, name: string) => {
+  on(IPC.filesOpen, async (name: string) => {
     try {
-      deleteManagedFile(paths.configDir, kind, name)
-      return ok(null)
-    } catch (error) {
-      return fail(error)
-    }
-  })
-  on(IPC.filesOpen, async (kind: ManagedKind, name: string) => {
-    try {
-      const target = managedFilePath(paths.configDir, kind, name)
-      const message = await shell.openPath(target)
+      const message = await shell.openPath(skillContentPath(paths.configDir, name))
       if (message) return fail(new Error(message))
+      return ok(null)
+    } catch (error) {
+      return fail(error)
+    }
+  })
+
+  on(IPC.pluginsList, () => {
+    try {
+      return ok(listPlugins(paths.configFile, paths.disabledPluginsFile))
+    } catch (error) {
+      return fail(error)
+    }
+  })
+  on(IPC.pluginsSetEnabled, (name: string, enabled: boolean) => {
+    try {
+      setPluginEnabled(paths.configFile, paths.disabledPluginsFile, name, enabled)
+      return ok(null)
+    } catch (error) {
+      return fail(error)
+    }
+  })
+  on(IPC.pluginsDelete, (name: string) => {
+    try {
+      deletePlugin(paths.configFile, paths.disabledPluginsFile, name)
       return ok(null)
     } catch (error) {
       return fail(error)

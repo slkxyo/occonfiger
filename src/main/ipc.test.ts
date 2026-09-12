@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { shell } from 'electron'
+import { writeConfig } from './config/io'
 import { IPC, registerIpc } from './ipc'
 import type { ConfigPaths } from './config/paths'
 
@@ -27,6 +28,7 @@ const paths: ConfigPaths = {
   configDir: '/cfg',
   configFile: '/cfg/opencode.json',
   agentsFile: '/cfg/AGENTS.md',
+  disabledPluginsFile: '/cfg/.occonfiger/disabled-plugins.json',
   dataDir: '/data',
   authFile: '/data/auth.json'
 }
@@ -127,20 +129,20 @@ describe('registerIpc', () => {
     expect(result.error).toBe('boom')
   })
 
-  it('opens a managed file with validated kind and name', async () => {
+  it('opens the SKILL.md content file', async () => {
     const ipc = fakeIpc()
     registerIpc(ipc, paths)
     vi.mocked(shell.openPath).mockResolvedValue('')
-    const result = await ipc.invoke(IPC.filesOpen, 'command', 'deploy')
+    const result = await ipc.invoke(IPC.filesOpen, 'my-skill')
     expect(result).toEqual({ ok: true, data: null })
-    expect(shell.openPath).toHaveBeenCalledWith('/cfg/command/deploy.md')
+    expect(shell.openPath).toHaveBeenCalledWith('/cfg/skills/my-skill/SKILL.md')
   })
 
   it('wraps shell.openPath failures', async () => {
     const ipc = fakeIpc()
     registerIpc(ipc, paths)
     vi.mocked(shell.openPath).mockResolvedValue('权限不足')
-    const result = (await ipc.invoke(IPC.filesOpen, 'command', 'deploy')) as {
+    const result = (await ipc.invoke(IPC.filesOpen, 'my-skill')) as {
       ok: boolean
       error?: string
     }
@@ -151,12 +153,12 @@ describe('registerIpc', () => {
   it('rejects path traversal in filesOpen before touching the shell', async () => {
     const ipc = fakeIpc()
     registerIpc(ipc, paths)
-    const result = (await ipc.invoke(IPC.filesOpen, '../../..', 'passwd')) as {
+    const result = (await ipc.invoke(IPC.filesOpen, '../../..')) as {
       ok: boolean
       error?: string
     }
     expect(result.ok).toBe(false)
-    expect(result.error).toContain('非法的类型')
+    expect(result.error).toContain('非法的名称')
     expect(shell.openPath).not.toHaveBeenCalled()
   })
 
@@ -178,13 +180,39 @@ describe('registerIpc', () => {
     try {
       const ipc = fakeIpc()
       registerIpc(ipc, { ...paths, configDir: dir })
-      expect(await ipc.invoke(IPC.filesWrite, 'skill', 'my-skill', '内容')).toEqual({
+      expect(await ipc.invoke(IPC.filesWrite, 'my-skill', '内容')).toEqual({
         ok: true,
         data: null
       })
-      expect(await ipc.invoke(IPC.filesRead, 'skill', 'my-skill')).toEqual({
+      expect(await ipc.invoke(IPC.filesRead, 'my-skill')).toEqual({
         ok: true,
         data: '内容'
+      })
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('lists, toggles and deletes plugins through the config file', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'occ-ipc-plugins-'))
+    try {
+      const configFile = join(dir, 'opencode.jsonc')
+      const disabledPluginsFile = join(dir, '.occonfiger', 'disabled-plugins.json')
+      writeConfig(configFile, { plugin: ['a', 'b'] })
+      const ipc = fakeIpc()
+      registerIpc(ipc, { ...paths, configFile, disabledPluginsFile })
+      expect(await ipc.invoke(IPC.pluginsList)).toEqual({
+        ok: true,
+        data: [
+          { name: 'a', enabled: true, spec: 'a' },
+          { name: 'b', enabled: true, spec: 'b' }
+        ]
+      })
+      expect(await ipc.invoke(IPC.pluginsSetEnabled, 'b', false)).toEqual({ ok: true, data: null })
+      expect(await ipc.invoke(IPC.pluginsDelete, 'a')).toEqual({ ok: true, data: null })
+      expect(await ipc.invoke(IPC.pluginsList)).toEqual({
+        ok: true,
+        data: [{ name: 'b', enabled: false, spec: 'b' }]
       })
     } finally {
       rmSync(dir, { recursive: true, force: true })

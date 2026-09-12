@@ -1,63 +1,78 @@
 import { create } from 'zustand'
+import { deleteAt, setAt } from '../fields/path'
 
 type Draft = Record<string, unknown>
+
+export type SaveState = 'idle' | 'saving' | 'saved' | 'error'
+
+export type ChangeOptions = { immediate?: boolean }
+
+export const SAVE_DEBOUNCE_MS = 600
 
 function clone<T>(value: T): T {
   return structuredClone(value)
 }
 
-function setAt(root: Draft, path: string[], value: unknown): void {
-  let node = root
-  for (let i = 0; i < path.length - 1; i += 1) {
-    const key = path[i]
-    if (typeof node[key] !== 'object' || node[key] === null) node[key] = {}
-    node = node[key] as Draft
-  }
-  node[path[path.length - 1]] = value
-}
-
-function deleteAt(root: Draft, path: string[]): void {
-  const parents: Draft[] = [root]
-  let node = root
-  for (let i = 0; i < path.length - 1; i += 1) {
-    const next = node[path[i]]
-    if (typeof next !== 'object' || next === null) return
-    node = next as Draft
-    parents.push(node)
-  }
-  delete node[path[path.length - 1]]
-  for (let i = parents.length - 1; i > 0; i -= 1) {
-    if (Object.keys(parents[i]).length === 0) delete parents[i - 1][path[i - 1]]
-    else break
-  }
-}
-
 type ConfigState = {
   draft: Draft
-  original: Draft
-  dirty: boolean
+  revision: number
+  savedRevision: number
+  saveDelay: number
+  saveState: SaveState
+  saveErrors: string[]
   loadConfig: (data: Draft) => void
-  setField: (path: string[], value: unknown) => void
-  deleteField: (path: string[]) => void
-  markSaved: () => void
-  discardChanges: () => void
+  setField: (path: string[], value: unknown, options?: ChangeOptions) => void
+  deleteField: (path: string[], options?: ChangeOptions) => void
+  flush: () => void
+  beginSave: () => void
+  markSaved: (revision?: number) => void
+  markSaveError: (errors: string[]) => void
 }
 
 export const useConfigStore = create<ConfigState>((set, get) => ({
   draft: {},
-  original: {},
-  dirty: false,
-  loadConfig: (data) => set({ draft: clone(data), original: clone(data), dirty: false }),
-  setField: (path, value) => {
+  revision: 0,
+  savedRevision: 0,
+  saveDelay: SAVE_DEBOUNCE_MS,
+  saveState: 'idle',
+  saveErrors: [],
+  loadConfig: (data) =>
+    set({
+      draft: clone(data),
+      revision: 0,
+      savedRevision: 0,
+      saveDelay: SAVE_DEBOUNCE_MS,
+      saveState: 'idle',
+      saveErrors: []
+    }),
+  setField: (path, value, options) => {
     const draft = clone(get().draft)
     setAt(draft, path, value)
-    set({ draft, dirty: true })
+    set({
+      draft,
+      revision: get().revision + 1,
+      saveDelay: options?.immediate ? 0 : SAVE_DEBOUNCE_MS
+    })
   },
-  deleteField: (path) => {
+  deleteField: (path, options) => {
     const draft = clone(get().draft)
     deleteAt(draft, path)
-    set({ draft, dirty: true })
+    set({
+      draft,
+      revision: get().revision + 1,
+      saveDelay: options?.immediate ? 0 : SAVE_DEBOUNCE_MS
+    })
   },
-  markSaved: () => set({ original: clone(get().draft), dirty: false }),
-  discardChanges: () => set({ draft: clone(get().original), dirty: false })
+  flush: () => {
+    if (get().revision === get().savedRevision) return
+    set({ revision: get().revision + 1, saveDelay: 0 })
+  },
+  beginSave: () => set({ saveState: 'saving' }),
+  markSaved: (revision) =>
+    set({
+      saveState: 'saved',
+      saveErrors: [],
+      savedRevision: revision ?? get().revision
+    }),
+  markSaveError: (errors) => set({ saveState: 'error', saveErrors: errors })
 }))

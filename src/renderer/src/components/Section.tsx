@@ -1,8 +1,9 @@
-import { Box, Heading, Text } from '@chakra-ui/react'
+import { Box, Flex, Heading, Text } from '@chakra-ui/react'
 
 export function Section(props: {
   title: string
   description?: string
+  action?: React.ReactNode
   children: React.ReactNode
 }): React.JSX.Element {
   return (
@@ -15,9 +16,10 @@ export function Section(props: {
       p="20px"
       mb="16px"
     >
-      <Heading size="md" mb="4px">
-        {props.title}
-      </Heading>
+      <Flex justify="space-between" align="start" gap="12px" mb="4px">
+        <Heading size="md">{props.title}</Heading>
+        {props.action ? <Box flexShrink={0}>{props.action}</Box> : null}
+      </Flex>
       {props.description ? (
         <Text fontSize="sm" color="fg.muted" mb="16px">
           {props.description}

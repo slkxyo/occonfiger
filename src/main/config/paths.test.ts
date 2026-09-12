@@ -28,4 +28,9 @@ describe('resolvePaths', () => {
     const p = resolvePaths({ HOME: '/home/u' })
     expect(p.agentsFile).toBe('/home/u/.config/opencode/AGENTS.md')
   })
+
+  it('resolves the app-side disabled plugins file', () => {
+    const p = resolvePaths({ HOME: '/home/u' })
+    expect(p.disabledPluginsFile).toBe('/home/u/.config/opencode/.occonfiger/disabled-plugins.json')
+  })
 })

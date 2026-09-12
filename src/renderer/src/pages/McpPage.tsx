@@ -4,13 +4,16 @@ import { ListEditor } from '../components/ListEditor'
 import { KeyValueEditor } from '../components/KeyValueEditor'
 import { OAuthField, SelectField, TagsField, TextField } from '../fields/controls'
 import { useField } from '../fields/useField'
+import { ConfigViewButton } from '../components/ConfigViewButton'
 
 function EnabledSwitch({ server }: { server: string }): React.JSX.Element {
   const { value, set, clear } = useField(['mcp', server, 'enabled'])
   return (
     <Switch.Root
       checked={value !== false}
-      onCheckedChange={(e) => (e.checked ? clear() : set(false))}
+      onCheckedChange={(e) =>
+        e.checked ? clear({ immediate: true }) : set(false, { immediate: true })
+      }
     >
       <Switch.HiddenInput aria-label={`${server} 启用`} />
       <Switch.Control />
@@ -62,13 +65,13 @@ function sortByEnabled(keys: string[], container: Record<string, unknown>): stri
 
 export function McpPage(): React.JSX.Element {
   return (
-    <Section title="MCP 服务" description="Model Context Protocol 服务器配置。">
+    <Section
+      title="MCP 服务"
+      description="Model Context Protocol 服务器配置。"
+      action={<ConfigViewButton />}
+    >
       <ListEditor
         path={['mcp']}
-        addLabel="添加 MCP 服务"
-        inputLabel="新 MCP 服务名"
-        placeholder="playwright"
-        hideAdd
         collapsible
         defaultCollapsed
         sortKeys={sortByEnabled}

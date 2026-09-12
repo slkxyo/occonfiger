@@ -35,6 +35,20 @@ describe('SettingsPage', () => {
     expect(useConfigStore.getState().draft.autoupdate).toBeUndefined()
   })
 
+  it('defaults the permission selector to allow without an unset option', async () => {
+    render(
+      <Provider>
+        <SettingsPage />
+      </Provider>
+    )
+    const trigger = screen.getByLabelText('全局权限')
+    expect(trigger).toHaveTextContent('allow')
+    await userEvent.click(trigger)
+    expect(screen.queryByRole('option', { name: '（未设置）' })).not.toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'allow' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'ask' })).toBeInTheDocument()
+  })
+
   it('sets the global permission action', async () => {
     render(
       <Provider>
@@ -43,16 +57,5 @@ describe('SettingsPage', () => {
     )
     await pickMenu('全局权限', 'deny')
     expect(useConfigStore.getState().draft.permission).toEqual({ '*': 'deny' })
-  })
-
-  it('removes the permission field when cleared', async () => {
-    useConfigStore.getState().loadConfig({ permission: { '*': 'deny' } })
-    render(
-      <Provider>
-        <SettingsPage />
-      </Provider>
-    )
-    await pickMenu('全局权限', '（未设置）')
-    expect(useConfigStore.getState().draft.permission).toBeUndefined()
   })
 })

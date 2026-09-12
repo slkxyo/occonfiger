@@ -4,6 +4,7 @@ import { MenuSelect } from '../fields/MenuSelect'
 import { useField } from '../fields/useField'
 import { useConfigStore } from '../store/configStore'
 import { getAt } from '../fields/path'
+import { ConfigViewButton } from '../components/ConfigViewButton'
 
 const PERMISSION_ACTIONS = ['allow', 'ask', 'deny']
 
@@ -27,7 +28,9 @@ function AutoUpdateSetting(): React.JSX.Element {
       </Box>
       <Switch.Root
         checked={value !== false}
-        onCheckedChange={(e) => (e.checked ? clear() : set(false))}
+        onCheckedChange={(e) =>
+          e.checked ? clear({ immediate: true }) : set(false, { immediate: true })
+        }
       >
         <Switch.HiddenInput aria-label="自动更新" />
         <Switch.Control />
@@ -39,8 +42,7 @@ function AutoUpdateSetting(): React.JSX.Element {
 function PermissionSetting(): React.JSX.Element {
   const draft = useConfigStore((s) => s.draft)
   const setField = useConfigStore((s) => s.setField)
-  const deleteField = useConfigStore((s) => s.deleteField)
-  const action = currentPermission(draft)
+  const action = currentPermission(draft) || 'allow'
   return (
     <HStack justify="space-between" align="start">
       <Box>
@@ -57,10 +59,8 @@ function PermissionSetting(): React.JSX.Element {
           options={PERMISSION_ACTIONS}
           value={action}
           width="160px"
-          onChange={(v) => {
-            if (v === '') deleteField(['permission'])
-            else setField(['permission'], { '*': v })
-          }}
+          allowEmpty={false}
+          onChange={(v) => setField(['permission'], { '*': v }, { immediate: true })}
         />
       </Box>
     </HStack>
@@ -69,7 +69,7 @@ function PermissionSetting(): React.JSX.Element {
 
 export function SettingsPage(): React.JSX.Element {
   return (
-    <Section title="设置" description="opencode 的通用设置。">
+    <Section title="全局设置" description="opencode 的通用设置。" action={<ConfigViewButton />}>
       <VStack align="stretch" gap="20px">
         <AutoUpdateSetting />
         <PermissionSetting />

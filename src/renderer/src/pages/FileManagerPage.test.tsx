@@ -8,8 +8,6 @@ function stubApi(files: { name: string; path: string }[] = [{ name: 'docker-info
   listManagedFiles: ReturnType<typeof vi.fn>
   readManagedFile: ReturnType<typeof vi.fn>
   writeManagedFile: ReturnType<typeof vi.fn>
-  createManagedFile: ReturnType<typeof vi.fn>
-  renameManagedFile: ReturnType<typeof vi.fn>
   deleteManagedFile: ReturnType<typeof vi.fn>
   openManagedFile: ReturnType<typeof vi.fn>
 } {
@@ -17,8 +15,6 @@ function stubApi(files: { name: string; path: string }[] = [{ name: 'docker-info
     listManagedFiles: vi.fn().mockResolvedValue(files),
     readManagedFile: vi.fn().mockResolvedValue('# SKILL 内容'),
     writeManagedFile: vi.fn().mockResolvedValue(null),
-    createManagedFile: vi.fn().mockResolvedValue('/x'),
-    renameManagedFile: vi.fn().mockResolvedValue(null),
     deleteManagedFile: vi.fn().mockResolvedValue(null),
     openManagedFile: vi.fn().mockResolvedValue(null)
   }
@@ -44,14 +40,14 @@ describe('FileManagerPage', () => {
     const api = stubApi()
     renderPage()
     expect(await screen.findByText('docker-info')).toBeInTheDocument()
-    expect(api.listManagedFiles).toHaveBeenCalledWith('skill')
+    expect(api.listManagedFiles).toHaveBeenCalledWith()
   })
 
   it('loads content when a skill is selected', async () => {
     const api = stubApi()
     renderPage()
     await userEvent.click(await screen.findByRole('button', { name: 'docker-info' }))
-    expect(api.readManagedFile).toHaveBeenCalledWith('skill', 'docker-info')
+    expect(api.readManagedFile).toHaveBeenCalledWith('docker-info')
     expect(await screen.findByDisplayValue('# SKILL 内容')).toBeInTheDocument()
   })
 
@@ -63,16 +59,16 @@ describe('FileManagerPage', () => {
     await userEvent.clear(box)
     await userEvent.type(box, '新内容')
     await userEvent.click(screen.getByRole('button', { name: '保存' }))
-    expect(api.writeManagedFile).toHaveBeenCalledWith('skill', 'docker-info', '新内容')
+    expect(api.writeManagedFile).toHaveBeenCalledWith('docker-info', '新内容')
     expect(await screen.findByText('已保存')).toBeInTheDocument()
   })
 
-  it('creates a skill', async () => {
+  it('opens the selected skill with the system default app', async () => {
     const api = stubApi()
     renderPage()
-    await userEvent.type(await screen.findByLabelText('新建名称'), 'new-skill')
-    await userEvent.click(screen.getByRole('button', { name: '新建' }))
-    expect(api.createManagedFile).toHaveBeenCalledWith('skill', 'new-skill')
+    await userEvent.click(await screen.findByRole('button', { name: 'docker-info' }))
+    await userEvent.click(await screen.findByRole('button', { name: '打开 docker-info' }))
+    expect(api.openManagedFile).toHaveBeenCalledWith('docker-info')
   })
 
   it('shows an empty state when there are no skills', async () => {

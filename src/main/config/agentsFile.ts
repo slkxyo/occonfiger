@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname } from 'node:path'
+import { existsSync, readFileSync } from 'node:fs'
+import { writeFileAtomic } from '../util/atomicWrite'
 
 export function readAgentsFile(file: string): string {
   if (!existsSync(file)) return ''
@@ -7,6 +7,5 @@ export function readAgentsFile(file: string): string {
 }
 
 export function writeAgentsFile(file: string, content: string): void {
-  mkdirSync(dirname(file), { recursive: true })
-  writeFileSync(file, content, { encoding: 'utf8' })
+  writeFileAtomic(file, content)
 }

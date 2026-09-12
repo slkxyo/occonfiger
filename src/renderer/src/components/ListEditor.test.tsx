@@ -4,78 +4,59 @@ import userEvent from '@testing-library/user-event'
 import { Provider } from './ui/provider'
 import { useConfigStore } from '../store/configStore'
 import { ListEditor } from './ListEditor'
-import { pickMenu } from '../test/menu'
 
 function wrap(ui: React.ReactElement): ReturnType<typeof render> {
   return render(<Provider>{ui}</Provider>)
 }
 
 describe('ListEditor', () => {
-  beforeEach(() => useConfigStore.getState().loadConfig({ provider: { alpha: { name: 'Alpha' } } }))
+  beforeEach(() =>
+    useConfigStore.getState().loadConfig({ provider: { alpha: { name: 'Alpha' }, beta: {} } })
+  )
   afterEach(() => cleanup())
 
-  it('does not overwrite an existing key', async () => {
-    wrap(
-      <ListEditor path={['provider']} addLabel="添加 Provider" inputLabel="新 Provider ID">
-        {() => null}
-      </ListEditor>
-    )
-    await userEvent.click(screen.getByRole('button', { name: '添加 Provider' }))
-    await userEvent.type(await screen.findByLabelText('新 Provider ID'), 'alpha')
-    await userEvent.click(screen.getByRole('button', { name: '保存' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('同名条目已存在。')
-    expect(useConfigStore.getState().draft.provider).toEqual({ alpha: { name: 'Alpha' } })
-    expect(screen.getByLabelText('新 Provider ID')).toBeInTheDocument()
+  it('renders one item per key', () => {
+    wrap(<ListEditor path={['provider']}>{() => null}</ListEditor>)
+    expect(screen.getByText('alpha')).toBeInTheDocument()
+    expect(screen.getByText('beta')).toBeInTheDocument()
   })
 
-  it('creates an entry from the dialog form', async () => {
+  it('applies a custom key order', () => {
     wrap(
-      <ListEditor
-        path={['provider']}
-        addLabel="添加 Provider"
-        inputLabel="新 Provider ID"
-        createFields={[
-          {
-            kind: 'select',
-            key: 'kind',
-            label: '类型',
-            options: ['a', 'b'],
-            defaultValue: 'a',
-            required: true
-          },
-          { kind: 'text', key: 'url', label: '地址', when: { field: 'kind', equals: 'b' } }
-        ]}
-      >
+      <ListEditor path={['provider']} sortKeys={(keys) => [...keys].reverse()}>
         {() => null}
       </ListEditor>
     )
-    await userEvent.click(screen.getByRole('button', { name: '添加 Provider' }))
-    await userEvent.type(await screen.findByLabelText('新 Provider ID'), 'beta')
-    await pickMenu('类型', 'b')
-    await userEvent.type(screen.getByLabelText('地址'), 'https://x')
-    await userEvent.click(screen.getByRole('button', { name: '保存' }))
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
-    expect(useConfigStore.getState().draft.provider).toEqual({
-      alpha: { name: 'Alpha' },
-      beta: { kind: 'b', url: 'https://x' }
-    })
+    const names = screen.getAllByText(/^(alpha|beta)$/).map((el) => el.textContent)
+    expect(names).toEqual(['beta', 'alpha'])
   })
 
-  it('blocks save when a required field is empty', async () => {
+  it('deletes an item', async () => {
+    wrap(<ListEditor path={['provider']}>{() => null}</ListEditor>)
+    await userEvent.click(screen.getAllByRole('button', { name: '删除' })[0])
+    expect(useConfigStore.getState().draft.provider).toEqual({ beta: {} })
+  })
+
+  it('collapses and expands an item', async () => {
     wrap(
-      <ListEditor
-        path={['provider']}
-        addLabel="添加 Provider"
-        inputLabel="新 Provider ID"
-        createFields={[{ kind: 'text', key: 'command', label: '命令', required: true }]}
-      >
+      <ListEditor path={['provider']} collapsible defaultCollapsed>
+        {(key) => <span>内容 {key}</span>}
+      </ListEditor>
+    )
+    expect(screen.queryByText('内容 alpha')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: '展开 alpha' }))
+    expect(screen.getByText('内容 alpha')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: '折叠 alpha' }))
+    expect(screen.queryByText('内容 alpha')).not.toBeInTheDocument()
+  })
+
+  it('renders a title accessory per key', () => {
+    wrap(
+      <ListEditor path={['provider']} titleAccessory={(key) => <span>开关 {key}</span>}>
         {() => null}
       </ListEditor>
     )
-    await userEvent.click(screen.getByRole('button', { name: '添加 Provider' }))
-    await userEvent.type(await screen.findByLabelText('新 Provider ID'), 'beta')
-    await userEvent.click(screen.getByRole('button', { name: '保存' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('「命令」为必填项。')
-    expect(useConfigStore.getState().draft.provider).toEqual({ alpha: { name: 'Alpha' } })
+    expect(screen.getByText('开关 alpha')).toBeInTheDocument()
+    expect(screen.getByText('开关 beta')).toBeInTheDocument()
   })
 })

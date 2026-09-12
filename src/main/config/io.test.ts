@@ -71,6 +71,12 @@ describe('config io', () => {
     })
   })
 
+  it('ignores a top-level array', () => {
+    const file = tmpFile()
+    writeFileSync(file, '[1, 2, 3]')
+    expect(readConfig(file).data).toEqual({})
+  })
+
   it('returns raw text', () => {
     const file = tmpFile()
     writeFileSync(file, '{ "a": 1 }')

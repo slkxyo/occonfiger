@@ -28,7 +28,9 @@ function createWindow(): void {
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
+    if (details.url.startsWith('http:') || details.url.startsWith('https:')) {
+      shell.openExternal(details.url)
+    }
     return { action: 'deny' }
   })
 
@@ -56,7 +58,11 @@ app.whenReady().then(() => {
   })
 
   const paths = resolvePaths()
-  migrateConfig(paths.configDir)
+  try {
+    migrateConfig(paths.configDir)
+  } catch (error) {
+    console.error('配置迁移失败，已跳过：', error)
+  }
   registerIpc(ipcMain, paths)
 
   createWindow()

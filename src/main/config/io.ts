@@ -1,6 +1,6 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
-import { dirname } from 'node:path'
+import { existsSync, readFileSync } from 'node:fs'
 import { parse, printParseErrorCode, type ParseError } from 'jsonc-parser'
+import { writeFileAtomic } from '../util/atomicWrite'
 
 export type ConfigReadResult = {
   data: Record<string, unknown>
@@ -16,7 +16,10 @@ export function readConfig(file: string): ConfigReadResult {
   if (raw === null || raw.trim() === '') return { data: {} }
   const errors: ParseError[] = []
   const parsed = parse(raw, errors, { allowTrailingComma: true })
-  const data = parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : {}
+  const data =
+    parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : {}
   if (errors.length === 0) return { data }
   const first = errors[0]
   return {
@@ -26,8 +29,5 @@ export function readConfig(file: string): ConfigReadResult {
 }
 
 export function writeConfig(file: string, data: unknown): void {
-  mkdirSync(dirname(file), { recursive: true })
-  const tmp = `${file}.tmp-${process.pid}`
-  writeFileSync(tmp, `${JSON.stringify(data, null, 2)}\n`, 'utf8')
-  renameSync(tmp, file)
+  writeFileAtomic(file, `${JSON.stringify(data, null, 2)}\n`)
 }

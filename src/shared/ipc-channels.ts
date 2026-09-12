@@ -11,10 +11,9 @@ export const IPC = {
   filesList: 'files:list',
   filesRead: 'files:read',
   filesWrite: 'files:write',
-  filesCreate: 'files:create',
-  filesRename: 'files:rename',
   filesDelete: 'files:delete',
-  filesOpen: 'files:open'
+  filesOpen: 'files:open',
+  pluginsList: 'plugins:list',
+  pluginsSetEnabled: 'plugins:setEnabled',
+  pluginsDelete: 'plugins:delete'
 } as const
-
-export type IpcChannel = (typeof IPC)[keyof typeof IPC]
