@@ -13,7 +13,9 @@ describe('McpPage', () => {
   afterEach(() => cleanup())
 
   beforeEach(() =>
-    useConfigStore.getState().loadConfig({ mcp: { exa: { type: 'remote', url: 'https://x' } } })
+    useConfigStore
+      .getState()
+      .loadConfig({ mcp: { servers: { exa: { type: 'remote', url: 'https://x' } } } })
   )
 
   it('collapses server details by default', () => {
@@ -40,7 +42,7 @@ describe('McpPage', () => {
   it('renders local environment as a key-value editor', async () => {
     useConfigStore
       .getState()
-      .loadConfig({ mcp: { s: { type: 'local', environment: { FOO: 'bar' } } } })
+      .loadConfig({ mcp: { servers: { s: { type: 'local', environment: { FOO: 'bar' } } } } })
     render(
       <Provider>
         <McpPage />
@@ -52,7 +54,7 @@ describe('McpPage', () => {
 
   it('renders remote headers as a key-value editor', async () => {
     useConfigStore.getState().loadConfig({
-      mcp: { exa: { type: 'remote', url: 'https://x', headers: { 'X-Token': 'abc' } } }
+      mcp: { servers: { exa: { type: 'remote', url: 'https://x', headers: { 'X-Token': 'abc' } } } }
     })
     render(
       <Provider>
@@ -74,17 +76,17 @@ describe('McpPage', () => {
     expect(oauth).not.toBeChecked()
     await userEvent.click(oauth)
     expect(useConfigStore.getState().draft.mcp).toEqual({
-      exa: { type: 'remote', url: 'https://x', oauth: false }
+      servers: { exa: { type: 'remote', url: 'https://x', oauth: false } }
     })
     await userEvent.click(oauth)
     expect(useConfigStore.getState().draft.mcp).toEqual({
-      exa: { type: 'remote', url: 'https://x' }
+      servers: { exa: { type: 'remote', url: 'https://x' } }
     })
   })
 
   it('keeps an oauth object untouched and hides the switch', async () => {
     useConfigStore.getState().loadConfig({
-      mcp: { exa: { type: 'remote', url: 'https://x', oauth: { clientId: 'abc' } } }
+      mcp: { servers: { exa: { type: 'remote', url: 'https://x', oauth: { client_id: 'abc' } } } }
     })
     render(
       <Provider>
@@ -95,13 +97,13 @@ describe('McpPage', () => {
     expect(screen.queryByRole('checkbox', { name: '禁用自动检测' })).not.toBeInTheDocument()
     expect(screen.getByText('当前为 OAuth 对象配置，暂不支持可视化编辑')).toBeInTheDocument()
     expect(useConfigStore.getState().draft.mcp).toEqual({
-      exa: { type: 'remote', url: 'https://x', oauth: { clientId: 'abc' } }
+      servers: { exa: { type: 'remote', url: 'https://x', oauth: { client_id: 'abc' } } }
     })
   })
 
   it('shows the switch checked when oauth is false and removes the key when unchecked', async () => {
     useConfigStore.getState().loadConfig({
-      mcp: { exa: { type: 'remote', url: 'https://x', oauth: false } }
+      mcp: { servers: { exa: { type: 'remote', url: 'https://x', oauth: false } } }
     })
     render(
       <Provider>
@@ -113,11 +115,11 @@ describe('McpPage', () => {
     expect(oauth).toBeChecked()
     await userEvent.click(oauth)
     expect(useConfigStore.getState().draft.mcp).toEqual({
-      exa: { type: 'remote', url: 'https://x' }
+      servers: { exa: { type: 'remote', url: 'https://x' } }
     })
   })
 
-  it('toggles enabled from the collapsed header', async () => {
+  it('toggles disabled from the collapsed header', async () => {
     render(
       <Provider>
         <McpPage />
@@ -127,20 +129,22 @@ describe('McpPage', () => {
     expect(toggle).toBeChecked()
     await userEvent.click(toggle)
     expect(useConfigStore.getState().draft.mcp).toEqual({
-      exa: { type: 'remote', url: 'https://x', enabled: false }
+      servers: { exa: { type: 'remote', url: 'https://x', disabled: true } }
     })
     await userEvent.click(toggle)
     expect(useConfigStore.getState().draft.mcp).toEqual({
-      exa: { type: 'remote', url: 'https://x' }
+      servers: { exa: { type: 'remote', url: 'https://x' } }
     })
   })
 
   it('lists enabled servers before disabled ones', () => {
     useConfigStore.getState().loadConfig({
       mcp: {
-        off: { type: 'local', enabled: false },
-        on: { type: 'local' },
-        explicit: { type: 'local', enabled: true }
+        servers: {
+          off: { type: 'local', disabled: true },
+          on: { type: 'local' },
+          explicit: { type: 'local', disabled: false }
+        }
       }
     })
     render(
