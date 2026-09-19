@@ -62,7 +62,11 @@ function McpCard({ server }: { server: string }): React.JSX.Element {
           />
         </>
       )}
-      <TextField path={['mcp', 'servers', server, 'timeout', 'request']} label="请求超时（毫秒）" />
+      <TextField
+        kind="number"
+        path={['mcp', 'servers', server, 'timeout', 'request']}
+        label="请求超时（毫秒）"
+      />
     </>
   )
 }

@@ -31,9 +31,7 @@ describe('validateConfig', () => {
   })
 
   it('accepts a V2 plugins array with object entries', () => {
-    expect(
-      validateConfig({ plugins: ['a', { package: 'b', options: { x: 1 } }] }).valid
-    ).toBe(true)
+    expect(validateConfig({ plugins: ['a', { package: 'b', options: { x: 1 } }] }).valid).toBe(true)
   })
 
   it('rejects V1 singular plugin field', () => {

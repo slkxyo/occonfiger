@@ -167,4 +167,23 @@ describe('McpPage', () => {
     )
     expect(screen.queryByRole('button', { name: '添加 MCP 服务' })).not.toBeInTheDocument()
   })
+
+  it('writes the request timeout as a number', async () => {
+    useConfigStore
+      .getState()
+      .loadConfig({ mcp: { servers: { s: { type: 'local', command: ['x'] } } } })
+    render(
+      <Provider>
+        <McpPage />
+      </Provider>
+    )
+    await expand('s')
+    const input = screen.getByLabelText('请求超时（毫秒）')
+    await userEvent.clear(input)
+    await userEvent.type(input, '5000')
+    const draft = useConfigStore.getState().draft as {
+      mcp: { servers: { s: { timeout: { request: number } } } }
+    }
+    expect(draft.mcp.servers.s.timeout.request).toBe(5000)
+  })
 })

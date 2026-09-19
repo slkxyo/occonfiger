@@ -17,8 +17,22 @@ export function TextField(props: {
   description?: string
   placeholder?: string
   multiline?: boolean
+  kind?: 'text' | 'number'
 }): React.JSX.Element {
-  const { value, set, flush } = useField(props.path)
+  const { value, set, clear, flush } = useField(props.path)
+  const handleChange = (raw: string): void => {
+    if (props.kind !== 'number') {
+      set(raw)
+      return
+    }
+    const trimmed = raw.trim()
+    if (trimmed === '') {
+      clear()
+      return
+    }
+    const parsed = Number(trimmed)
+    if (Number.isFinite(parsed) && parsed > 0) set(parsed)
+  }
   return (
     <Field label={props.label} description={props.description}>
       {props.multiline ? (
@@ -26,7 +40,7 @@ export function TextField(props: {
           aria-label={props.label}
           value={asString(value)}
           placeholder={props.placeholder}
-          onChange={(e) => set(e.target.value)}
+          onChange={(e) => handleChange(e.target.value)}
           onBlur={() => flush()}
         />
       ) : (
@@ -34,7 +48,7 @@ export function TextField(props: {
           aria-label={props.label}
           value={asString(value)}
           placeholder={props.placeholder}
-          onChange={(e) => set(e.target.value)}
+          onChange={(e) => handleChange(e.target.value)}
           onBlur={() => flush()}
         />
       )}
