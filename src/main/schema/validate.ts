@@ -4,19 +4,11 @@ import { loadBuiltinSchema } from './builtin'
 
 export type ValidationResult = { valid: boolean; errors: string[] }
 
-const externalStubs = [
-  {
-    $id: 'https://models.dev/model-schema.json',
-    $defs: { Model: true }
-  }
-]
-
 let cached: ValidateFunction | null = null
 
 function getValidator(): ValidateFunction {
   if (cached) return cached
   const ajv = new Ajv2020({ allErrors: true, strict: false, allowUnionTypes: true })
-  for (const stub of externalStubs) ajv.addSchema(stub)
   cached = ajv.compile(loadBuiltinSchema())
   return cached
 }
