@@ -47,7 +47,7 @@ export function PluginPage(): React.JSX.Element {
   return (
     <Section
       title="插件管理"
-      description="管理 opencode.jsonc 中 plugin 数组的插件。停用会移出配置并记录，重新启用可原样还原。"
+      description="管理 opencode.jsonc 中 plugins 数组的插件。停用会移出配置并记录，重新启用可原样还原。"
       action={<ConfigViewButton />}
     >
       {error ? (
@@ -66,7 +66,7 @@ export function PluginPage(): React.JSX.Element {
       ) : null}
       {!error && sorted.length === 0 ? (
         <Text fontSize="sm" color="fg.muted">
-          尚未配置任何插件，可在 opencode.jsonc 中添加 plugin 后返回本页。
+          尚未配置任何插件，可在 opencode.jsonc 中添加 plugins 后返回本页。
         </Text>
       ) : null}
       {sorted.map((item, index) => (
