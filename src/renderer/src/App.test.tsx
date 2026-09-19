@@ -70,23 +70,6 @@ describe('App', () => {
     await waitFor(() => expect(saveConfig).toHaveBeenCalled())
   })
 
-  it('defaults the global permission to allow on load', async () => {
-    const saveConfig = vi.fn().mockResolvedValue([])
-    stubApi({ saveConfig })
-    render(
-      <Provider>
-        <App />
-      </Provider>
-    )
-    await screen.findByRole('button', { name: '展开 exa' })
-    await waitFor(() =>
-      expect(saveConfig).toHaveBeenCalledWith(
-        expect.objectContaining({ permission: { '*': 'allow' } }),
-        false
-      )
-    )
-  })
-
   it('navigates to the plugin manager', async () => {
     stubApi()
     render(

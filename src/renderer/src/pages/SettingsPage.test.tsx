@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event'
 import { Provider } from '../components/ui/provider'
 import { useConfigStore } from '../store/configStore'
 import { SettingsPage } from './SettingsPage'
-import { pickMenu } from '../test/menu'
 
 describe('SettingsPage', () => {
   beforeEach(() => useConfigStore.getState().loadConfig({}))
@@ -35,27 +34,12 @@ describe('SettingsPage', () => {
     expect(useConfigStore.getState().draft.autoupdate).toBeUndefined()
   })
 
-  it('defaults the permission selector to allow without an unset option', async () => {
+  it('renders the permission rules editor', () => {
     render(
       <Provider>
         <SettingsPage />
       </Provider>
     )
-    const trigger = screen.getByLabelText('全局权限')
-    expect(trigger).toHaveTextContent('allow')
-    await userEvent.click(trigger)
-    expect(screen.queryByRole('option', { name: '（未设置）' })).not.toBeInTheDocument()
-    expect(screen.getByRole('option', { name: 'allow' })).toBeInTheDocument()
-    expect(screen.getByRole('option', { name: 'ask' })).toBeInTheDocument()
-  })
-
-  it('sets the global permission action', async () => {
-    render(
-      <Provider>
-        <SettingsPage />
-      </Provider>
-    )
-    await pickMenu('全局权限', 'deny')
-    expect(useConfigStore.getState().draft.permission).toEqual({ '*': 'deny' })
+    expect(screen.getByText('未配置权限规则')).toBeInTheDocument()
   })
 })

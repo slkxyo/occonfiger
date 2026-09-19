@@ -1,18 +1,8 @@
 import { Box, HStack, Switch, Text, VStack } from '@chakra-ui/react'
 import { Section } from '../components/Section'
-import { MenuSelect } from '../fields/MenuSelect'
+import { PermissionRulesEditor } from '../components/PermissionRulesEditor'
 import { useField } from '../fields/useField'
-import { useConfigStore } from '../store/configStore'
-import { getAt } from '../fields/path'
 import { ConfigViewButton } from '../components/ConfigViewButton'
-
-const PERMISSION_ACTIONS = ['allow', 'ask', 'deny']
-
-function currentPermission(draft: Record<string, unknown>): string {
-  if (typeof draft.permission === 'string') return draft.permission
-  const star = getAt(draft, ['permission', '*'])
-  return typeof star === 'string' ? star : ''
-}
 
 function AutoUpdateSetting(): React.JSX.Element {
   const { value, set, clear } = useField(['autoupdate'])
@@ -39,40 +29,12 @@ function AutoUpdateSetting(): React.JSX.Element {
   )
 }
 
-function PermissionSetting(): React.JSX.Element {
-  const draft = useConfigStore((s) => s.draft)
-  const setField = useConfigStore((s) => s.setField)
-  const action = currentPermission(draft) || 'allow'
-  return (
-    <HStack justify="space-between" align="start">
-      <Box>
-        <Text fontSize="sm" fontWeight="medium">
-          权限
-        </Text>
-        <Text fontSize="xs" color="fg.muted">
-          统一设置所有工具的默认动作：allow / ask / deny。
-        </Text>
-      </Box>
-      <Box w="160px" flexShrink={0}>
-        <MenuSelect
-          ariaLabel="全局权限"
-          options={PERMISSION_ACTIONS}
-          value={action}
-          width="160px"
-          allowEmpty={false}
-          onChange={(v) => setField(['permission'], { '*': v }, { immediate: true })}
-        />
-      </Box>
-    </HStack>
-  )
-}
-
 export function SettingsPage(): React.JSX.Element {
   return (
     <Section title="全局设置" description="opencode 的通用设置。" action={<ConfigViewButton />}>
       <VStack align="stretch" gap="20px">
         <AutoUpdateSetting />
-        <PermissionSetting />
+        <PermissionRulesEditor />
       </VStack>
     </Section>
   )

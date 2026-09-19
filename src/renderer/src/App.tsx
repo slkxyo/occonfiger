@@ -3,7 +3,6 @@ import { Box, Button, Text } from '@chakra-ui/react'
 import { FolderOpen, KeyRound, MessageSquareText, Plug, Puzzle, Settings } from 'lucide-react'
 import { AppLayout } from './components/layout/AppLayout'
 import { useConfigStore } from './store/configStore'
-import { permissionDefault } from './store/permission'
 import { useAutoSave } from './hooks/useAutoSave'
 import { McpPage } from './pages/McpPage'
 import { CredentialsPage } from './pages/CredentialsPage'
@@ -36,7 +35,6 @@ export function App(): React.JSX.Element {
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState('')
   const loadConfig = useConfigStore((s) => s.loadConfig)
-  const setField = useConfigStore((s) => s.setField)
   const { forceSave, status, saveErrors } = useAutoSave()
 
   useEffect(() => {
@@ -44,12 +42,10 @@ export function App(): React.JSX.Element {
       .readConfig()
       .then((config) => {
         loadConfig(config)
-        const fallback = permissionDefault(config)
-        if (fallback) setField(fallback.path, fallback.value, { immediate: true })
         setLoaded(true)
       })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
-  }, [loadConfig, setField])
+  }, [loadConfig])
 
   return (
     <AppLayout navItems={NAV} active={active} onNavigate={setActive}>
