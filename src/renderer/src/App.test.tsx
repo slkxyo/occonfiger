@@ -7,7 +7,7 @@ import { App } from './App'
 function stubApi(overrides: Record<string, unknown> = {}): void {
   vi.stubGlobal('api', {
     readConfig: vi.fn().mockResolvedValue({
-      mcp: { exa: { type: 'remote', url: 'https://x' } }
+      mcp: { servers: { exa: { type: 'remote', url: 'https://x' } } }
     }),
     saveConfig: vi.fn().mockResolvedValue([]),
     listPlugins: vi.fn().mockResolvedValue([]),

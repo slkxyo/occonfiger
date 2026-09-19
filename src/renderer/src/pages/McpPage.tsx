@@ -34,14 +34,26 @@ function McpCard({ server }: { server: string }): React.JSX.Element {
       />
       {type === 'local' ? (
         <>
-          <TagsField path={['mcp', 'servers', server, 'command']} label="命令" placeholder="回车添加参数" />
+          <TagsField
+            path={['mcp', 'servers', server, 'command']}
+            label="命令"
+            placeholder="回车添加参数"
+          />
           <TextField path={['mcp', 'servers', server, 'cwd']} label="工作目录" />
-          <KeyValueEditor path={['mcp', 'servers', server, 'environment']} label="环境变量" valueLabel="值" />
+          <KeyValueEditor
+            path={['mcp', 'servers', server, 'environment']}
+            label="环境变量"
+            valueLabel="值"
+          />
         </>
       ) : (
         <>
           <TextField path={['mcp', 'servers', server, 'url']} label="URL" />
-          <KeyValueEditor path={['mcp', 'servers', server, 'headers']} label="请求头" valueLabel="值" />
+          <KeyValueEditor
+            path={['mcp', 'servers', server, 'headers']}
+            label="请求头"
+            valueLabel="值"
+          />
           <OAuthField
             path={['mcp', 'servers', server, 'oauth']}
             label="OAuth"
@@ -50,10 +62,7 @@ function McpCard({ server }: { server: string }): React.JSX.Element {
           />
         </>
       )}
-      <TextField
-        path={['mcp', 'servers', server, 'timeout', 'request']}
-        label="请求超时（毫秒）"
-      />
+      <TextField path={['mcp', 'servers', server, 'timeout', 'request']} label="请求超时（毫秒）" />
     </>
   )
 }
