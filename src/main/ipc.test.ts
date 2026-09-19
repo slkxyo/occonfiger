@@ -198,7 +198,7 @@ describe('registerIpc', () => {
     try {
       const configFile = join(dir, 'opencode.jsonc')
       const disabledPluginsFile = join(dir, '.occonfiger', 'disabled-plugins.json')
-      writeConfig(configFile, { plugin: ['a', 'b'] })
+      writeConfig(configFile, { plugins: ['a', 'b'] })
       const ipc = fakeIpc()
       registerIpc(ipc, { ...paths, configFile, disabledPluginsFile })
       expect(await ipc.invoke(IPC.pluginsList)).toEqual({

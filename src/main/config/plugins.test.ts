@@ -19,7 +19,7 @@ afterEach(() => rmSync(dir, { recursive: true, force: true }))
 
 function pluginArray(): unknown[] {
   const data = readConfig(configFile).data
-  return Array.isArray(data.plugin) ? data.plugin : []
+  return Array.isArray(data.plugins) ? data.plugins : []
 }
 
 describe('pluginName', () => {
@@ -33,38 +33,38 @@ describe('pluginName', () => {
 
 describe('plugin management', () => {
   it('lists enabled plugins before disabled ones', () => {
-    writeConfig(configFile, { plugin: ['a', ['b', { x: 1 }]] })
+    writeConfig(configFile, { plugins: ['a', { package: 'b', options: { x: 1 } }] })
     setPluginEnabled(configFile, disabledFile, 'b', false)
     expect(listPlugins(configFile, disabledFile)).toEqual([
       { name: 'a', enabled: true, spec: 'a' },
-      { name: 'b', enabled: false, spec: ['b', { x: 1 }] }
+      { name: 'b', enabled: false, spec: { package: 'b', options: { x: 1 } } }
     ])
   })
 
   it('moves a disabled plugin out of the config and keeps its original spec', () => {
-    writeConfig(configFile, { plugin: ['a', ['b', { x: 1 }]] })
+    writeConfig(configFile, { plugins: ['a', { package: 'b', options: { x: 1 } }] })
     setPluginEnabled(configFile, disabledFile, 'b', false)
     expect(pluginArray()).toEqual(['a'])
     expect(listPlugins(configFile, disabledFile)[1]).toEqual({
       name: 'b',
       enabled: false,
-      spec: ['b', { x: 1 }]
+      spec: { package: 'b', options: { x: 1 } }
     })
   })
 
   it('restores the original spec when re-enabled', () => {
-    writeConfig(configFile, { plugin: ['a', ['b', { x: 1 }]] })
+    writeConfig(configFile, { plugins: ['a', { package: 'b', options: { x: 1 } }] })
     setPluginEnabled(configFile, disabledFile, 'b', false)
     setPluginEnabled(configFile, disabledFile, 'b', true)
-    expect(pluginArray()).toEqual(['a', ['b', { x: 1 }]])
+    expect(pluginArray()).toEqual(['a', { package: 'b', options: { x: 1 } }])
     expect(listPlugins(configFile, disabledFile)).toEqual([
       { name: 'a', enabled: true, spec: 'a' },
-      { name: 'b', enabled: true, spec: ['b', { x: 1 }] }
+      { name: 'b', enabled: true, spec: { package: 'b', options: { x: 1 } } }
     ])
   })
 
   it('deletes a plugin from both the config and the disabled record', () => {
-    writeConfig(configFile, { plugin: ['a', 'b'] })
+    writeConfig(configFile, { plugins: ['a', 'b'] })
     setPluginEnabled(configFile, disabledFile, 'b', false)
     deletePlugin(configFile, disabledFile, 'b')
     expect(pluginArray()).toEqual(['a'])
@@ -72,13 +72,13 @@ describe('plugin management', () => {
   })
 
   it('keeps other config fields untouched', () => {
-    writeConfig(configFile, { model: 'a/b', plugin: ['x'] })
+    writeConfig(configFile, { model: 'a/b', plugins: ['x'] })
     setPluginEnabled(configFile, disabledFile, 'x', false)
-    expect(readConfig(configFile).data).toEqual({ model: 'a/b', plugin: [] })
+    expect(readConfig(configFile).data).toEqual({ model: 'a/b', plugins: [] })
   })
 
   it('is idempotent for unknown plugin names', () => {
-    writeConfig(configFile, { plugin: ['a'] })
+    writeConfig(configFile, { plugins: ['a'] })
     setPluginEnabled(configFile, disabledFile, 'missing', false)
     setPluginEnabled(configFile, disabledFile, 'missing', true)
     deletePlugin(configFile, disabledFile, 'missing')
@@ -87,7 +87,7 @@ describe('plugin management', () => {
   })
 
   it('tolerates a missing or corrupted disabled record', () => {
-    writeConfig(configFile, { plugin: ['a'] })
+    writeConfig(configFile, { plugins: ['a'] })
     expect(listPlugins(configFile, disabledFile)).toEqual([{ name: 'a', enabled: true, spec: 'a' }])
     mkdirSync(join(dir, '.occonfiger'), { recursive: true })
     writeFileSync(disabledFile, 'not json', 'utf8')

@@ -38,12 +38,12 @@ function writeDisabled(file: string, disabled: unknown[]): void {
 
 function readPluginArray(configFile: string): unknown[] {
   const data = readConfig(configFile).data
-  return Array.isArray(data.plugin) ? data.plugin : []
+  return Array.isArray(data.plugins) ? data.plugins : []
 }
 
 function writePluginArray(configFile: string, plugins: unknown[]): void {
   const data = readConfig(configFile).data
-  writeConfig(configFile, { ...data, plugin: plugins })
+  writeConfig(configFile, { ...data, plugins })
 }
 
 export function listPlugins(configFile: string, disabledFile: string): PluginEntry[] {
