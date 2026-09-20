@@ -91,7 +91,7 @@ describe('registerIpc', () => {
       readConfig: () => ({ data: {} }),
       readRaw: () => null
     })
-    const result = (await ipc.invoke(IPC.configSave, { totally_unknown: 1 }, false)) as {
+    const result = (await ipc.invoke(IPC.configSave, { snapshots: 'yes' }, false)) as {
       ok: boolean
       error?: string
     }

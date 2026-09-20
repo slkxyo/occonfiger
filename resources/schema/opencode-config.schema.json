@@ -33,7 +33,10 @@
         "color": {
           "anyOf": [
             { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
-            { "type": "string", "enum": ["primary", "secondary", "accent", "success", "warning", "error", "info"] }
+            {
+              "type": "string",
+              "enum": ["primary", "secondary", "accent", "success", "warning", "error", "info"]
+            }
           ]
         },
         "steps": { "type": "integer", "exclusiveMinimum": 0 },
@@ -46,9 +49,11 @@
       "type": "object",
       "properties": {
         "startup": { "type": "integer", "exclusiveMinimum": 0 },
-        "request": { "type": "integer", "exclusiveMinimum": 0 }
+        "request": { "type": "integer", "exclusiveMinimum": 0 },
+        "catalog": { "type": "integer", "exclusiveMinimum": 0 },
+        "execution": { "type": "integer", "exclusiveMinimum": 0 }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "McpOAuth": {
       "type": "object",
@@ -69,10 +74,11 @@
         "cwd": { "type": "string" },
         "environment": { "type": "object", "additionalProperties": { "type": "string" } },
         "disabled": { "type": "boolean" },
+        "codemode": { "type": "boolean" },
         "timeout": { "$ref": "#/$defs/McpTimeout" }
       },
       "required": ["type", "command"],
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "McpRemote": {
       "type": "object",
@@ -81,16 +87,14 @@
         "url": { "type": "string" },
         "headers": { "type": "object", "additionalProperties": { "type": "string" } },
         "oauth": {
-          "anyOf": [
-            { "$ref": "#/$defs/McpOAuth" },
-            { "type": "boolean", "enum": [false] }
-          ]
+          "anyOf": [{ "$ref": "#/$defs/McpOAuth" }, { "type": "boolean", "enum": [false] }]
         },
         "disabled": { "type": "boolean" },
+        "codemode": { "type": "boolean" },
         "timeout": { "$ref": "#/$defs/McpTimeout" }
       },
       "required": ["type", "url"],
-      "additionalProperties": false
+      "additionalProperties": true
     },
     "McpConfig": {
       "type": "object",
@@ -99,10 +103,7 @@
         "servers": {
           "type": "object",
           "additionalProperties": {
-            "anyOf": [
-              { "$ref": "#/$defs/McpLocal" },
-              { "$ref": "#/$defs/McpRemote" }
-            ]
+            "anyOf": [{ "$ref": "#/$defs/McpLocal" }, { "$ref": "#/$defs/McpRemote" }]
           }
         }
       },
@@ -234,7 +235,10 @@
         "shell": { "type": "string" },
         "model": { "type": "string" },
         "default_agent": { "type": "string" },
-        "autoupdate": { "anyOf": [{ "type": "boolean" }, { "type": "string", "enum": ["notify"] }] },
+        "autoupdate": {
+          "anyOf": [{ "type": "boolean" }, { "type": "string", "enum": ["notify"] }]
+        },
+        "update": { "type": "string", "enum": ["disable", "notify", "auto"] },
         "share": { "type": "string", "enum": ["manual", "auto", "disabled"] },
         "enterprise": {
           "type": "object",
@@ -259,7 +263,12 @@
               "type": "object",
               "additionalProperties": {
                 "anyOf": [
-                  { "type": "object", "properties": { "disabled": { "type": "boolean", "enum": [true] } }, "required": ["disabled"], "additionalProperties": false },
+                  {
+                    "type": "object",
+                    "properties": { "disabled": { "type": "boolean", "enum": [true] } },
+                    "required": ["disabled"],
+                    "additionalProperties": false
+                  },
                   { "$ref": "#/$defs/LspServer" }
                 ]
               }
@@ -271,7 +280,10 @@
         "mcp": { "$ref": "#/$defs/McpConfig" },
         "compaction": { "$ref": "#/$defs/CompactionConfig" },
         "skills": { "type": "array", "items": { "type": "string" } },
-        "commands": { "type": "object", "additionalProperties": { "$ref": "#/$defs/CommandConfig" } },
+        "commands": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/CommandConfig" }
+        },
         "instructions": { "type": "array", "items": { "type": "string" } },
         "references": {
           "type": "object",
@@ -286,10 +298,7 @@
         "plugins": {
           "type": "array",
           "items": {
-            "anyOf": [
-              { "type": "string" },
-              { "$ref": "#/$defs/PluginEntry" }
-            ]
+            "anyOf": [{ "type": "string" }, { "$ref": "#/$defs/PluginEntry" }]
           }
         },
         "experimental": {
@@ -301,7 +310,7 @@
         },
         "providers": { "type": "object" }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     }
   },
   "allowComments": true,
