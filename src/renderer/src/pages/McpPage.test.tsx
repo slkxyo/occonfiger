@@ -125,7 +125,7 @@ describe('McpPage', () => {
         <McpPage />
       </Provider>
     )
-    const toggle = screen.getByRole('checkbox', { name: 'exa 启用' })
+    const toggle = screen.getByRole('switch', { name: 'exa 启用' })
     expect(toggle).toBeChecked()
     await userEvent.click(toggle)
     expect(useConfigStore.getState().draft.mcp).toEqual({

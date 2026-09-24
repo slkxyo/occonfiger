@@ -1,4 +1,4 @@
-import { Switch } from '@chakra-ui/react'
+import { Switch } from '@/components/ui/switch'
 import { Section } from '../components/Section'
 import { ListEditor } from '../components/ListEditor'
 import { KeyValueEditor } from '../components/KeyValueEditor'
@@ -9,15 +9,13 @@ import { ConfigViewButton } from '../components/ConfigViewButton'
 function EnabledSwitch({ server }: { server: string }): React.JSX.Element {
   const { value, set, clear } = useField(['mcp', 'servers', server, 'disabled'])
   return (
-    <Switch.Root
+    <Switch
+      aria-label={`${server} 启用`}
       checked={value !== true}
-      onCheckedChange={(e) =>
-        e.checked ? clear({ immediate: true }) : set(true, { immediate: true })
+      onCheckedChange={(checked) =>
+        checked ? clear({ immediate: true }) : set(true, { immediate: true })
       }
-    >
-      <Switch.HiddenInput aria-label={`${server} 启用`} />
-      <Switch.Control />
-    </Switch.Root>
+    />
   )
 }
 

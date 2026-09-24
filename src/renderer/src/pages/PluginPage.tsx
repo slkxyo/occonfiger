@@ -1,5 +1,6 @@
-import { Box, Button, HStack, Switch, Text } from '@chakra-ui/react'
 import { useEffect, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import { Section } from '../components/Section'
 import { enterStyle } from '../components/motion'
 import { ConfigViewButton } from '../components/ConfigViewButton'
@@ -51,63 +52,45 @@ export function PluginPage(): React.JSX.Element {
       action={<ConfigViewButton />}
     >
       {error ? (
-        <Box
-          role="alert"
-          borderWidth="1px"
-          borderColor="error"
-          borderRadius="card"
-          p="12px"
-          mb="12px"
-        >
-          <Text fontSize="sm" color="error">
-            操作失败：{error}
-          </Text>
-        </Box>
+        <div role="alert" className="mb-3 rounded-xl border border-destructive p-3">
+          <p className="text-sm text-destructive">操作失败：{error}</p>
+        </div>
       ) : null}
       {!error && sorted.length === 0 ? (
-        <Text fontSize="sm" color="fg.muted">
+        <p className="text-sm text-muted-foreground">
           尚未配置任何插件，可在 opencode.jsonc 中添加 plugins 后返回本页。
-        </Text>
+        </p>
       ) : null}
       {sorted.map((item, index) => (
-        <Box
+        <div
           key={item.name}
-          className="oc-enter"
-          style={enterStyle(index)}
-          borderWidth="1px"
-          borderColor="border.default"
-          borderRadius="card"
-          p="16px"
-          mb="12px"
-          bg="bg.default"
-          opacity={item.enabled ? 1 : 0.65}
+          className="oc-enter mb-3 rounded-xl border border-border bg-background p-4"
+          style={{ ...enterStyle(index), opacity: item.enabled ? 1 : 0.65 }}
         >
-          <HStack justify="space-between">
-            <HStack gap="8px">
-              <Text fontFamily="mono" fontSize="sm" fontWeight="medium">
-                {item.name}
-              </Text>
-              <Text fontSize="xs" color="fg.muted">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-sm font-medium">{item.name}</span>
+              <span className="text-xs text-muted-foreground">
                 {item.enabled ? '已启用' : '已停用'}
-              </Text>
-            </HStack>
-            <HStack gap="8px">
-              <Switch.Root checked={item.enabled} onCheckedChange={() => toggle(item)}>
-                <Switch.HiddenInput aria-label={`${item.name} 启用`} />
-                <Switch.Control />
-              </Switch.Root>
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                aria-label={`${item.name} 启用`}
+                checked={item.enabled}
+                onCheckedChange={() => toggle(item)}
+              />
               <Button
                 size="xs"
-                variant="ghost"
-                colorPalette="error"
+                variant="destructive"
                 aria-label={`删除 ${item.name}`}
                 onClick={() => remove(item)}
               >
                 删除
               </Button>
-            </HStack>
-          </HStack>
-        </Box>
+            </div>
+          </div>
+        </div>
       ))}
     </Section>
   )

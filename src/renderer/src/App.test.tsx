@@ -66,7 +66,7 @@ describe('App', () => {
         <App />
       </Provider>
     )
-    await userEvent.click(await screen.findByRole('checkbox', { name: 'exa 启用' }))
+    await userEvent.click(await screen.findByRole('switch', { name: 'exa 启用' }))
     await waitFor(() => expect(saveConfig).toHaveBeenCalled())
   })
 

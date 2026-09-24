@@ -15,7 +15,7 @@ describe('SettingsPage', () => {
         <SettingsPage />
       </Provider>
     )
-    const toggle = screen.getByRole('checkbox', { name: '自动更新' })
+    const toggle = screen.getByRole('switch', { name: '自动更新' })
     expect(toggle).toBeChecked()
     await userEvent.click(toggle)
     expect(useConfigStore.getState().draft.autoupdate).toBe(false)
@@ -28,7 +28,7 @@ describe('SettingsPage', () => {
         <SettingsPage />
       </Provider>
     )
-    const toggle = screen.getByRole('checkbox', { name: '自动更新' })
+    const toggle = screen.getByRole('switch', { name: '自动更新' })
     expect(toggle).not.toBeChecked()
     await userEvent.click(toggle)
     expect(useConfigStore.getState().draft.autoupdate).toBeUndefined()

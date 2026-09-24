@@ -43,7 +43,7 @@ describe('PluginPage', () => {
         <PluginPage />
       </Provider>
     )
-    await userEvent.click(await screen.findByRole('checkbox', { name: 'disabled-one 启用' }))
+    await userEvent.click(await screen.findByRole('switch', { name: 'disabled-one 启用' }))
     expect(setPluginEnabled).toHaveBeenCalledWith('disabled-one', true)
   })
 
