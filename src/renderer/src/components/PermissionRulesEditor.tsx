@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 import { cn } from 'cn'
+import { Autocomplete } from '../fields/Autocomplete'
 import { Field } from '../fields/Field'
 import { useConfigStore } from '../store/configStore'
 import { enterStyle } from './motion'
@@ -134,13 +135,12 @@ export function PermissionRulesEditor(): React.JSX.Element {
             >
               <div className="flex items-start gap-2">
                 <div className="w-[140px] shrink-0">
-                  <Input
-                    aria-label={`权限动作 ${index}`}
-                    list="oc-permission-actions"
-                    className="font-mono"
+                  <Autocomplete
+                    ariaLabel={`权限动作 ${index}`}
+                    options={ACTION_SUGGESTIONS}
                     value={rule.action}
                     placeholder="action"
-                    onChange={(e) => update(index, { action: e.target.value })}
+                    onChange={(v) => update(index, { action: v })}
                   />
                 </div>
                 <Input
@@ -190,11 +190,6 @@ export function PermissionRulesEditor(): React.JSX.Element {
           ))}
         </div>
       )}
-      <datalist id="oc-permission-actions">
-        {ACTION_SUGGESTIONS.map((action) => (
-          <option key={action} value={action} />
-        ))}
-      </datalist>
       <Button
         size="sm"
         variant="outline"
