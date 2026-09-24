@@ -69,7 +69,7 @@ describe('SessionsPage', () => {
     expect(screen.getByText('beta 会话')).toBeInTheDocument()
   })
 
-  it('saves an inline rename on Enter', async () => {
+  it('opens rename dialog and saves a new title', async () => {
     const renameSession = vi.fn().mockResolvedValue(null)
     stubApi({ renameSession })
     render(
@@ -79,13 +79,15 @@ describe('SessionsPage', () => {
     )
     await screen.findByText('alpha 会话')
     await userEvent.click(screen.getByRole('button', { name: '重命名 alpha 会话' }))
-    const input = screen.getByRole('textbox', { name: '编辑会话标题' })
+    const dialog = await screen.findByRole('dialog', { name: '重命名会话' })
+    const input = within(dialog).getByRole('textbox', { name: '会话标题' })
     await userEvent.clear(input)
-    await userEvent.type(input, '新标题{Enter}')
+    await userEvent.type(input, '新标题')
+    await userEvent.click(within(dialog).getByRole('button', { name: '保存' }))
     await waitFor(() => expect(renameSession).toHaveBeenCalledWith('alpha', '新标题'))
   })
 
-  it('cancels an inline rename on Escape', async () => {
+  it('saves rename on Enter in the dialog', async () => {
     const renameSession = vi.fn().mockResolvedValue(null)
     stubApi({ renameSession })
     render(
@@ -95,14 +97,14 @@ describe('SessionsPage', () => {
     )
     await screen.findByText('alpha 会话')
     await userEvent.click(screen.getByRole('button', { name: '重命名 alpha 会话' }))
-    const input = screen.getByRole('textbox', { name: '编辑会话标题' })
+    const dialog = await screen.findByRole('dialog', { name: '重命名会话' })
+    const input = within(dialog).getByRole('textbox', { name: '会话标题' })
     await userEvent.clear(input)
-    await userEvent.type(input, '不应保存{Escape}')
-    await waitFor(() => expect(screen.getByText('alpha 会话')).toBeInTheDocument())
-    expect(renameSession).not.toHaveBeenCalled()
+    await userEvent.type(input, '回车保存{Enter}')
+    await waitFor(() => expect(renameSession).toHaveBeenCalledWith('alpha', '回车保存'))
   })
 
-  it('does not save on Enter while an IME composition is active', async () => {
+  it('does not save rename on Enter while an IME composition is active', async () => {
     const renameSession = vi.fn().mockResolvedValue(null)
     stubApi({ renameSession })
     render(
@@ -112,17 +114,17 @@ describe('SessionsPage', () => {
     )
     await screen.findByText('alpha 会话')
     await userEvent.click(screen.getByRole('button', { name: '重命名 alpha 会话' }))
-    const input = screen.getByRole('textbox', { name: '编辑会话标题' })
+    const dialog = await screen.findByRole('dialog', { name: '重命名会话' })
+    const input = within(dialog).getByRole('textbox', { name: '会话标题' })
     await userEvent.clear(input)
     await userEvent.type(input, '组合中')
     const composing = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
     Object.defineProperty(composing, 'isComposing', { value: true })
     fireEvent(input, composing)
-    expect(screen.getByRole('textbox', { name: '编辑会话标题' })).toBeInTheDocument()
     expect(renameSession).not.toHaveBeenCalled()
   })
 
-  it('cancels an inline rename when the title is cleared', async () => {
+  it('cancels a rename via the cancel button', async () => {
     const renameSession = vi.fn().mockResolvedValue(null)
     stubApi({ renameSession })
     render(
@@ -132,9 +134,32 @@ describe('SessionsPage', () => {
     )
     await screen.findByText('alpha 会话')
     await userEvent.click(screen.getByRole('button', { name: '重命名 alpha 会话' }))
-    await userEvent.clear(screen.getByRole('textbox', { name: '编辑会话标题' }))
-    await userEvent.type(screen.getByRole('textbox', { name: '编辑会话标题' }), '{Enter}')
-    await waitFor(() => expect(screen.getByText('alpha 会话')).toBeInTheDocument())
+    const dialog = await screen.findByRole('dialog', { name: '重命名会话' })
+    await userEvent.type(within(dialog).getByRole('textbox', { name: '会话标题' }), '不应保存')
+    await userEvent.click(within(dialog).getByRole('button', { name: '取消' }))
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: '重命名会话' })).not.toBeInTheDocument()
+    )
+    expect(renameSession).not.toHaveBeenCalled()
+  })
+
+  it('does not save when the rename title is cleared', async () => {
+    const renameSession = vi.fn().mockResolvedValue(null)
+    stubApi({ renameSession })
+    render(
+      <Provider>
+        <SessionsPage />
+      </Provider>
+    )
+    await screen.findByText('alpha 会话')
+    await userEvent.click(screen.getByRole('button', { name: '重命名 alpha 会话' }))
+    const dialog = await screen.findByRole('dialog', { name: '重命名会话' })
+    const input = within(dialog).getByRole('textbox', { name: '会话标题' })
+    await userEvent.clear(input)
+    await userEvent.click(within(dialog).getByRole('button', { name: '保存' }))
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: '重命名会话' })).not.toBeInTheDocument()
+    )
     expect(renameSession).not.toHaveBeenCalled()
   })
 
@@ -162,7 +187,7 @@ describe('SessionsPage', () => {
     expect(screen.getByText('未命名会话')).toBeInTheDocument()
   })
 
-  it('deletes a session after confirmation', async () => {
+  it('deletes a session after confirmation in the alert dialog', async () => {
     const deleteSession = vi.fn().mockResolvedValue(null)
     stubApi({ deleteSession })
     render(
@@ -177,7 +202,7 @@ describe('SessionsPage', () => {
     await waitFor(() => expect(deleteSession).toHaveBeenCalledWith('beta'))
   })
 
-  it('does not delete when confirmation is cancelled', async () => {
+  it('does not delete when the confirmation is cancelled', async () => {
     const deleteSession = vi.fn().mockResolvedValue(null)
     stubApi({ deleteSession })
     render(
@@ -190,6 +215,49 @@ describe('SessionsPage', () => {
     const dialog = await screen.findByRole('alertdialog')
     await userEvent.click(within(dialog).getByRole('button', { name: '取消' }))
     expect(deleteSession).not.toHaveBeenCalled()
+  })
+
+  it('batch-deletes selected sessions after confirmation', async () => {
+    const deleteSession = vi.fn().mockResolvedValue(null)
+    stubApi({ deleteSession })
+    render(
+      <Provider>
+        <SessionsPage />
+      </Provider>
+    )
+    await screen.findByText('alpha 会话')
+    // 进入多选模式
+    await userEvent.click(screen.getByRole('button', { name: '多选' }))
+    // 勾选两个会话
+    await userEvent.click(screen.getByRole('checkbox', { name: '选择 alpha 会话' }))
+    await userEvent.click(screen.getByRole('checkbox', { name: '选择 beta 会话' }))
+    // 点批量删除
+    await userEvent.click(screen.getByRole('button', { name: /删除选中/ }))
+    const dialog = await screen.findByRole('alertdialog')
+    await userEvent.click(within(dialog).getByRole('button', { name: '删除' }))
+    await waitFor(() => {
+      expect(deleteSession).toHaveBeenCalledWith('alpha')
+      expect(deleteSession).toHaveBeenCalledWith('beta')
+    })
+  })
+
+  it('selects all and clears selection via the select-all toggle', async () => {
+    stubApi()
+    render(
+      <Provider>
+        <SessionsPage />
+      </Provider>
+    )
+    await screen.findByText('alpha 会话')
+    await userEvent.click(screen.getByRole('button', { name: '多选' }))
+    // 全选
+    await userEvent.click(screen.getByRole('button', { name: '全选' }))
+    expect(screen.getByRole('checkbox', { name: '选择 alpha 会话' })).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: '选择 beta 会话' })).toBeChecked()
+    // 取消全选
+    await userEvent.click(screen.getByRole('button', { name: '取消全选' }))
+    expect(screen.getByRole('checkbox', { name: '选择 alpha 会话' })).not.toBeChecked()
+    expect(screen.getByRole('checkbox', { name: '选择 beta 会话' })).not.toBeChecked()
   })
 
   it('shows an error when loading fails', async () => {

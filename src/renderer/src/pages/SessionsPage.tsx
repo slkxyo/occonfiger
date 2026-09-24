@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,6 +11,15 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Section } from '../components/Section'
 import { enterStyle } from '../components/motion'
@@ -36,15 +45,32 @@ function toMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
+// 消息数量 → 颜色深浅（少量灰，随数量递增蓝色加深，超大量用最深+加粗）
+function messageCountClass(count: number): string {
+  if (count <= 10) return 'text-muted-foreground'
+  if (count <= 50) return 'text-blue-500'
+  if (count <= 200) return 'text-blue-600'
+  if (count <= 1000) return 'text-blue-700'
+  return 'font-semibold text-blue-800'
+}
+
 export function SessionsPage(): React.JSX.Element {
   const [sessions, setSessions] = useState<SessionSummary[]>([])
   const [query, setQuery] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [draft, setDraft] = useState('')
-  const [confirmTarget, setConfirmTarget] = useState<SessionSummary | null>(null)
-  const skipBlur = useRef(false)
+
+  // 重命名弹窗
+  const [renameTarget, setRenameTarget] = useState<SessionSummary | null>(null)
+  const [renameDraft, setRenameDraft] = useState('')
+
+  // 多选删除
+  const [selectMode, setSelectMode] = useState(false)
+  const [selection, setSelection] = useState<Set<string>>(new Set())
+  const [batchConfirm, setBatchConfirm] = useState(false)
+
+  // 单个删除确认
+  const [singleDeleteTarget, setSingleDeleteTarget] = useState<SessionSummary | null>(null)
 
   const reload = useCallback((): Promise<void> => {
     return window.api
@@ -61,51 +87,97 @@ export function SessionsPage(): React.JSX.Element {
     reload()
   }, [reload])
 
-  const startEdit = (session: SessionSummary): void => {
-    skipBlur.current = false
-    setEditingId(session.id)
-    setDraft(session.title ?? '')
+  const openRename = (session: SessionSummary): void => {
+    setRenameTarget(session)
+    setRenameDraft(session.title ?? '')
   }
 
-  const cancelEdit = (): void => {
-    skipBlur.current = true
-    setEditingId(null)
+  const closeRename = (): void => {
+    setRenameTarget(null)
+    setRenameDraft('')
   }
 
-  const commitEdit = (session: SessionSummary): void => {
-    if (skipBlur.current) {
-      skipBlur.current = false
+  const commitRename = (): void => {
+    const target = renameTarget
+    if (target === null) return
+    const next = renameDraft.trim()
+    if (!next || next === (target.title ?? '')) {
+      closeRename()
       return
     }
-    if (editingId !== session.id) return
-    const next = draft.trim()
-    setEditingId(null)
-    if (!next) return
-    if (next === (session.title ?? '')) return
     window.api
-      .renameSession(session.id, next)
+      .renameSession(target.id, next)
       .then(() => reload())
       .catch((e: unknown) => setError(toMessage(e)))
+      .finally(() => closeRename())
   }
 
   const remove = (session: SessionSummary): void => {
-    setConfirmTarget(session)
+    setSingleDeleteTarget(session)
   }
 
-  const confirmDelete = (): void => {
-    const target = confirmTarget
+  const confirmSingleDelete = (): void => {
+    const target = singleDeleteTarget
     if (target === null) return
     window.api
       .deleteSession(target.id)
       .then(() => reload())
       .catch((e: unknown) => setError(toMessage(e)))
-      .finally(() => setConfirmTarget(null))
+      .finally(() => setSingleDeleteTarget(null))
+  }
+
+  // —— 多选 ——
+  const enterSelectMode = (): void => {
+    setSelectMode(true)
+    setSelection(new Set())
+  }
+
+  const exitSelectMode = (): void => {
+    setSelectMode(false)
+    setSelection(new Set())
+  }
+
+  const toggleSelect = (id: string): void => {
+    setSelection((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleAll = (): void => {
+    setSelection((prev) => {
+      if (prev.size === filtered.length) return new Set()
+      return new Set(filtered.map((s) => s.id))
+    })
+  }
+
+  const openBatchConfirm = (): void => {
+    if (selection.size === 0) return
+    setBatchConfirm(true)
+  }
+
+  const confirmBatchDelete = (): void => {
+    const ids = Array.from(selection)
+    setBatchConfirm(false)
+    Promise.allSettled(ids.map((id) => window.api.deleteSession(id)))
+      .then((results) => {
+        const failed = results.filter((r) => r.status === 'rejected')
+        if (failed.length > 0) {
+          setError(`${failed.length} 个会话删除失败（共 ${ids.length} 个）`)
+        }
+      })
+      .then(() => reload())
+      .then(() => exitSelectMode())
   }
 
   const needle = query.trim().toLowerCase()
   const filtered = needle
     ? sessions.filter((session) => displayTitle(session.title).toLowerCase().includes(needle))
     : sessions
+
+  const allSelected = filtered.length > 0 && selection.size === filtered.length
 
   return (
     <Section
@@ -118,7 +190,7 @@ export function SessionsPage(): React.JSX.Element {
         </div>
       ) : null}
 
-      <div className="mb-4 flex items-center gap-2">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         <Input
           aria-label="搜索会话"
           placeholder="按标题搜索…"
@@ -129,6 +201,27 @@ export function SessionsPage(): React.JSX.Element {
         <Button variant="outline" aria-label="刷新列表" onClick={() => reload()}>
           刷新
         </Button>
+        {selectMode ? (
+          <>
+            <Button variant="outline" onClick={toggleAll}>
+              {allSelected ? '取消全选' : '全选'}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={selection.size === 0}
+              onClick={openBatchConfirm}
+            >
+              删除选中（{selection.size}）
+            </Button>
+            <Button variant="ghost" onClick={exitSelectMode}>
+              退出多选
+            </Button>
+          </>
+        ) : (
+          <Button variant="outline" onClick={enterSelectMode}>
+            多选
+          </Button>
+        )}
       </div>
 
       {loading && sessions.length === 0 ? (
@@ -143,92 +236,145 @@ export function SessionsPage(): React.JSX.Element {
 
       {filtered.map((session, index) => {
         const title = displayTitle(session.title)
-        const editing = editingId === session.id
+        const checked = selection.has(session.id)
         return (
           <Card key={session.id} size="sm" className="oc-enter mb-3" style={enterStyle(index)}>
             <CardContent className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  {editing ? (
-                    <Input
-                      autoFocus
-                      aria-label="编辑会话标题"
-                      value={draft}
-                      className="h-7 max-w-xs"
-                      onChange={(e) => setDraft(e.target.value)}
-                      onBlur={() => commitEdit(session)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.nativeEvent.isComposing) e.currentTarget.blur()
-                        if (e.key === 'Escape') cancelEdit()
-                      }}
-                    />
-                  ) : (
+              <div className="flex min-w-0 flex-1 items-start gap-2">
+                {selectMode ? (
+                  <input
+                    type="checkbox"
+                    aria-label={`选择 ${title}`}
+                    checked={checked}
+                    onChange={() => toggleSelect(session.id)}
+                    className="mt-1 size-4 shrink-0 rounded border-border accent-primary"
+                  />
+                ) : null}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       className="truncate text-left font-medium hover:underline"
-                      onClick={() => startEdit(session)}
+                      onClick={() => openRename(session)}
                     >
                       {title}
                     </button>
-                  )}
-                  {session.timeArchived !== null ? (
-                    <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
-                      已归档
+                    {session.timeArchived !== null ? (
+                      <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
+                        已归档
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    <span>创建 {formatTime(session.timeCreated)}</span>
+                    {' · '}
+                    <span>更新 {formatTime(session.timeUpdated)}</span>
+                    {' · '}
+                    <span className={messageCountClass(session.messageCount)}>
+                      {session.messageCount} 条消息
                     </span>
-                  ) : null}
+                  </p>
+                  <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
+                    {session.directory}
+                  </p>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  <span>创建 {formatTime(session.timeCreated)}</span>
-                  {' · '}
-                  <span>更新 {formatTime(session.timeUpdated)}</span>
-                  {' · '}
-                  <span>{session.messageCount} 条消息</span>
-                </p>
-                <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
-                  {session.directory}
-                </p>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  aria-label={`重命名 ${title}`}
-                  onClick={() => startEdit(session)}
-                >
-                  重命名
-                </Button>
-                <Button
-                  size="xs"
-                  variant="destructive"
-                  aria-label={`删除 ${title}`}
-                  onClick={() => remove(session)}
-                >
-                  删除
-                </Button>
-              </div>
+              {selectMode ? null : (
+                <div className="flex shrink-0 items-center gap-2">
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    aria-label={`重命名 ${title}`}
+                    onClick={() => openRename(session)}
+                  >
+                    重命名
+                  </Button>
+                  <Button
+                    size="xs"
+                    variant="destructive"
+                    aria-label={`删除 ${title}`}
+                    onClick={() => remove(session)}
+                  >
+                    删除
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         )
       })}
 
-      <AlertDialog
-        open={confirmTarget !== null}
+      {/* 重命名弹窗 */}
+      <Dialog
+        open={renameTarget !== null}
         onOpenChange={(open) => {
-          if (!open) setConfirmTarget(null)
+          if (!open) closeRename()
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>重命名会话</DialogTitle>
+            <DialogDescription>修改会话标题，留空或未改动将取消。</DialogDescription>
+          </DialogHeader>
+          <Input
+            autoFocus
+            aria-label="会话标题"
+            placeholder="输入新的会话标题"
+            value={renameDraft}
+            onChange={(e) => setRenameDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.nativeEvent.isComposing) commitRename()
+            }}
+          />
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline">取消</Button>} />
+            <Button onClick={commitRename}>保存</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 批量删除确认 */}
+      <AlertDialog
+        open={batchConfirm}
+        onOpenChange={(open) => {
+          if (!open) setBatchConfirm(false)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>批量删除会话</AlertDialogTitle>
+            <AlertDialogDescription>
+              {`确定删除选中的 ${selection.size} 个会话吗？此操作不可恢复，会一并删除其所有子会话和消息。建议先关闭 opencode 后再删除，避免运行中的 opencode 数据不一致。`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={confirmBatchDelete}>
+              删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 单个删除确认 */}
+      <AlertDialog
+        open={singleDeleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setSingleDeleteTarget(null)
         }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>删除会话</AlertDialogTitle>
             <AlertDialogDescription>
-              {confirmTarget !== null
-                ? `确定删除会话「${displayTitle(confirmTarget.title)}」吗？此操作不可恢复，会一并删除其所有子会话和消息。建议先关闭 opencode 后再删除，避免运行中的 opencode 数据不一致。`
+              {singleDeleteTarget !== null
+                ? `确定删除会话「${displayTitle(singleDeleteTarget.title)}」吗？此操作不可恢复，会一并删除其所有子会话和消息。建议先关闭 opencode 后再删除，避免运行中的 opencode 数据不一致。`
                 : ''}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={confirmDelete}>
+            <AlertDialogAction variant="destructive" onClick={confirmSingleDelete}>
               删除
             </AlertDialogAction>
           </AlertDialogFooter>
