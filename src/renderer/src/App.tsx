@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Box, Button, Text } from '@chakra-ui/react'
 import {
   FolderOpen,
   History,
@@ -10,6 +9,7 @@ import {
   Settings
 } from 'lucide-react'
 import { AppLayout } from './components/layout/AppLayout'
+import { Button } from './components/ui/button'
 import { useConfigStore } from './store/configStore'
 import { useAutoSave } from './hooks/useAutoSave'
 import { McpPage } from './pages/McpPage'
@@ -38,7 +38,7 @@ function CurrentPage({ id }: { id: string }): React.JSX.Element {
   if (id === 'settings') return <SettingsPage />
   if (id === 'plugins') return <PluginPage />
   if (id === 'sessions') return <SessionsPage />
-  return <Text color="fg.muted">页面不存在。</Text>
+  return <p className="text-muted-foreground">页面不存在。</p>
 }
 
 export function App(): React.JSX.Element {
@@ -61,63 +61,37 @@ export function App(): React.JSX.Element {
   return (
     <AppLayout navItems={NAV} active={active} onNavigate={setActive}>
       {error ? (
-        <Box
-          role="alert"
-          className="oc-fade"
-          borderWidth="1px"
-          borderColor="error"
-          borderRadius="card"
-          p="12px"
-          mb="16px"
-        >
-          <Text fontSize="sm" color="error">
-            {error}
-          </Text>
-        </Box>
+        <div role="alert" className="oc-fade mb-4 rounded-xl border border-destructive p-3">
+          <p className="text-sm text-destructive">{error}</p>
+        </div>
       ) : null}
       {saveErrors.length > 0 ? (
-        <Box
-          role="alert"
-          className="oc-fade"
-          borderWidth="1px"
-          borderColor="error"
-          borderRadius="card"
-          p="12px"
-          mb="16px"
-        >
-          <Text fontSize="sm" color="error" fontWeight="medium">
-            校验未通过
-          </Text>
-          <Box as="ul" mt="4px" pl="16px">
+        <div role="alert" className="oc-fade mb-4 rounded-xl border border-destructive p-3">
+          <p className="text-sm font-medium text-destructive">校验未通过</p>
+          <ul className="mt-1 pl-4">
             {saveErrors.map((item) => (
-              <Box as="li" key={item}>
-                <Text fontSize="sm" color="error">
-                  {item}
-                </Text>
-              </Box>
+              <li key={item}>
+                <p className="text-sm text-destructive">{item}</p>
+              </li>
             ))}
-          </Box>
-          <Button size="xs" mt="8px" colorPalette="error" onClick={forceSave}>
+          </ul>
+          <Button variant="destructive" size="xs" className="mt-2" onClick={forceSave}>
             强制保存
           </Button>
-        </Box>
+        </div>
       ) : null}
       {!loaded && !error ? (
-        <Text className="oc-fade" fontSize="sm" color="fg.muted">
-          加载配置中…
-        </Text>
+        <p className="oc-fade text-sm text-muted-foreground">加载配置中…</p>
       ) : null}
       {loaded && !error ? (
-        <Box key={active} className="oc-enter">
+        <div key={active} className="oc-enter">
           <CurrentPage id={active} />
-        </Box>
+        </div>
       ) : null}
       {status ? (
-        <Box className="oc-fade" mt="16px">
-          <Text fontSize="sm" color="fg.muted">
-            {status}
-          </Text>
-        </Box>
+        <div className="oc-fade mt-4">
+          <p className="text-sm text-muted-foreground">{status}</p>
+        </div>
       ) : null}
     </AppLayout>
   )

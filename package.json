@@ -24,10 +24,8 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
-    "@chakra-ui/react": "^3.37.0",
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
-    "@emotion/react": "^11.14.0",
     "ajv": "^8.20.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
