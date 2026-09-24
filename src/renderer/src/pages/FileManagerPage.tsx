@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { cn } from 'cn'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Section } from '../components/Section'
@@ -75,17 +76,24 @@ export function FileManagerPage(): React.JSX.Element {
           {files.length === 0 ? (
             <p className="text-sm text-muted-foreground">暂无 SKILL。</p>
           ) : (
-            files.map((file, index) => (
-              <Button
-                key={file.path}
-                className="oc-enter mb-1 w-full justify-start font-mono font-normal"
-                style={enterStyle(index)}
-                variant={selected === file.name ? 'secondary' : 'ghost'}
-                onClick={() => select(file.name)}
-              >
-                {file.name}
-              </Button>
-            ))
+            files.map((file, index) => {
+              const active = selected === file.name
+              return (
+                <Button
+                  key={file.path}
+                  className={cn(
+                    'oc-enter mb-1 w-full justify-start font-mono font-normal',
+                    active && 'font-medium'
+                  )}
+                  style={enterStyle(index)}
+                  variant={active ? 'secondary' : 'ghost'}
+                  aria-current={active ? 'page' : undefined}
+                  onClick={() => select(file.name)}
+                >
+                  {file.name}
+                </Button>
+              )
+            })
           )}
         </div>
         <div className="min-w-0 flex-1">

@@ -1,5 +1,6 @@
 import { Menu } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { cn } from 'cn'
 import { Button } from '@/components/ui/button'
 import { ColorModeButton } from '../app/color-mode'
 
@@ -20,14 +21,16 @@ export function Sidebar(props: {
       <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
         {props.items.map((item) => {
           const Icon = item.icon
+          const active = props.active === item.id
           return (
             <Button
               key={item.id}
-              variant={props.active === item.id ? 'secondary' : 'ghost'}
+              variant={active ? 'secondary' : 'ghost'}
               size="sm"
-              className="w-full min-w-0 shrink-0 justify-start gap-0"
+              className={cn('w-full min-w-0 shrink-0 justify-start gap-0', active && 'font-medium')}
               title={item.label}
               aria-label={item.label}
+              aria-current={active ? 'page' : undefined}
               onClick={() => props.onNavigate(item.id)}
             >
               {Icon ? (

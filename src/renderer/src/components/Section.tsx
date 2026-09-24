@@ -16,7 +16,7 @@ export function Section(props: {
   return (
     <Card className="mb-4">
       <CardHeader>
-        <CardTitle>{props.title}</CardTitle>
+        <CardTitle as="h2">{props.title}</CardTitle>
         {props.action ? <CardAction>{props.action}</CardAction> : null}
         {props.description ? <CardDescription>{props.description}</CardDescription> : null}
       </CardHeader>
