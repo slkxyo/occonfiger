@@ -11,7 +11,8 @@
 <img src="https://img.shields.io/badge/Electron-39-47848F?style=flat-square&logo=electron&logoColor=white" alt="Electron" />
 <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white" alt="React" />
 <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
-<img src="https://img.shields.io/badge/Chakra_UI-3-319795?style=flat-square&logo=chakraui&logoColor=white" alt="Chakra UI" />
+<img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
+<img src="https://img.shields.io/badge/shadcn%2Fui-base--nova-000000?style=flat-square&logo=shadcnui&logoColor=white" alt="shadcn/ui" />
 <img src="https://img.shields.io/badge/Platform-macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS" />
 <img src="https://img.shields.io/badge/Version-1.1.0-2F80ED?style=flat-square" alt="Version" />
 
@@ -92,7 +93,7 @@ pnpm build:mac  # 打包 macOS 安装包
 
 ## 技术栈
 
-Electron · React · TypeScript · Chakra UI · zustand · electron-vite · Vitest
+Electron · React · TypeScript · Tailwind CSS · shadcn/ui · zustand · electron-vite · Vitest
 
 <div align="center">
 <sub>为 opencode 用户打造</sub>
