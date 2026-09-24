@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Provider } from '../components/app/provider'
 import { SessionsPage } from './SessionsPage'
@@ -100,6 +100,66 @@ describe('SessionsPage', () => {
     await userEvent.type(input, '不应保存{Escape}')
     await waitFor(() => expect(screen.getByText('alpha 会话')).toBeInTheDocument())
     expect(renameSession).not.toHaveBeenCalled()
+  })
+
+  it('does not save on Enter while an IME composition is active', async () => {
+    const renameSession = vi.fn().mockResolvedValue(null)
+    stubApi({ renameSession })
+    render(
+      <Provider>
+        <SessionsPage />
+      </Provider>
+    )
+    await screen.findByText('alpha 会话')
+    await userEvent.click(screen.getByRole('button', { name: '重命名 alpha 会话' }))
+    const input = screen.getByRole('textbox', { name: '编辑会话标题' })
+    await userEvent.clear(input)
+    await userEvent.type(input, '组合中')
+    const composing = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
+    Object.defineProperty(composing, 'isComposing', { value: true })
+    fireEvent(input, composing)
+    expect(screen.getByRole('textbox', { name: '编辑会话标题' })).toBeInTheDocument()
+    expect(renameSession).not.toHaveBeenCalled()
+  })
+
+  it('cancels an inline rename when the title is cleared', async () => {
+    const renameSession = vi.fn().mockResolvedValue(null)
+    stubApi({ renameSession })
+    render(
+      <Provider>
+        <SessionsPage />
+      </Provider>
+    )
+    await screen.findByText('alpha 会话')
+    await userEvent.click(screen.getByRole('button', { name: '重命名 alpha 会话' }))
+    await userEvent.clear(screen.getByRole('textbox', { name: '编辑会话标题' }))
+    await userEvent.type(screen.getByRole('textbox', { name: '编辑会话标题' }), '{Enter}')
+    await waitFor(() => expect(screen.getByText('alpha 会话')).toBeInTheDocument())
+    expect(renameSession).not.toHaveBeenCalled()
+  })
+
+  it('finds untitled sessions when searching the displayed placeholder', async () => {
+    stubApi({
+      listSessions: vi.fn().mockResolvedValue([
+        {
+          id: 'untitled',
+          title: null,
+          directory: '/tmp/untitled',
+          timeCreated: 1_700_000_000_000,
+          timeUpdated: 1_700_000_000_000,
+          timeArchived: null,
+          messageCount: 0
+        }
+      ])
+    })
+    render(
+      <Provider>
+        <SessionsPage />
+      </Provider>
+    )
+    await screen.findByText('未命名会话')
+    await userEvent.type(screen.getByRole('textbox', { name: '搜索会话' }), '未命名')
+    expect(screen.getByText('未命名会话')).toBeInTheDocument()
   })
 
   it('deletes a session after confirmation', async () => {

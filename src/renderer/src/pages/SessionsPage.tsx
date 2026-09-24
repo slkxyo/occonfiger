@@ -69,6 +69,7 @@ export function SessionsPage(): React.JSX.Element {
     if (editingId !== session.id) return
     const next = draft.trim()
     setEditingId(null)
+    if (!next) return
     if (next === (session.title ?? '')) return
     window.api
       .renameSession(session.id, next)
@@ -90,7 +91,7 @@ export function SessionsPage(): React.JSX.Element {
 
   const needle = query.trim().toLowerCase()
   const filtered = needle
-    ? sessions.filter((session) => (session.title ?? '').toLowerCase().includes(needle))
+    ? sessions.filter((session) => displayTitle(session.title).toLowerCase().includes(needle))
     : sessions
 
   return (
@@ -144,7 +145,7 @@ export function SessionsPage(): React.JSX.Element {
                       onChange={(e) => setDraft(e.target.value)}
                       onBlur={() => commitEdit(session)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') e.currentTarget.blur()
+                        if (e.key === 'Enter' && !e.nativeEvent.isComposing) e.currentTarget.blur()
                         if (e.key === 'Escape') cancelEdit()
                       }}
                     />
