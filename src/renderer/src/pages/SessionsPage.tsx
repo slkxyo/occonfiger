@@ -45,13 +45,17 @@ function toMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
-// 消息数量 → 颜色深浅（少量灰，随数量递增 amber→orange→red，超大量红+加粗）
+// 消息数量 → 颜色深浅（灰→amber→orange→red 九档渐变，量多越深越红）
 function messageCountClass(count: number): string {
-  if (count <= 10) return 'text-muted-foreground'
-  if (count <= 50) return 'text-amber-500'
-  if (count <= 200) return 'text-orange-500'
-  if (count <= 1000) return 'text-orange-600'
-  return 'font-semibold text-red-600'
+  if (count === 0) return 'text-muted-foreground'
+  if (count <= 20) return 'text-amber-400'
+  if (count <= 60) return 'text-amber-500'
+  if (count <= 150) return 'text-amber-600'
+  if (count <= 300) return 'text-orange-500'
+  if (count <= 600) return 'text-orange-600'
+  if (count <= 1000) return 'text-red-500'
+  if (count <= 3000) return 'text-red-600'
+  return 'font-semibold text-red-700'
 }
 
 export function SessionsPage(): React.JSX.Element {
