@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { Provider } from '../components/ui/provider'
+import { Provider } from '../components/app/provider'
 import { useConfigStore } from '../store/configStore'
 import { SettingsPage } from './SettingsPage'
 

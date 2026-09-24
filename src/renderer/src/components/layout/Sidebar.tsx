@@ -1,7 +1,7 @@
 import { Box, Button, Flex, Text, VStack } from '@chakra-ui/react'
 import { Menu } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { ColorModeButton } from '../ui/color-mode'
+import { ColorModeButton } from '../app/color-mode'
 
 export type NavItem = { id: string; label: string; icon?: LucideIcon }
 

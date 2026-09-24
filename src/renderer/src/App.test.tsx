@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { Provider } from './components/ui/provider'
+import { Provider } from './components/app/provider'
 import { App } from './App'
 
 function stubApi(overrides: Record<string, unknown> = {}): void {

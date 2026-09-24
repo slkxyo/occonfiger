@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Boxes, Settings } from 'lucide-react'
-import { Provider } from '../ui/provider'
+import { Provider } from '../app/provider'
 import { AppLayout } from './AppLayout'
 
 const items = [
