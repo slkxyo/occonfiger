@@ -45,13 +45,14 @@ function toMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
-// 消息数量 → 颜色深浅（<10 不变色；10-200 间 amber→orange 渐变；>200 固定最深红）
+// 消息数量 → 颜色深浅（<10 不变色；10-500 间 amber→orange→red 渐变；>500 固定最深红）
 function messageCountClass(count: number): string {
   if (count < 10) return ''
   if (count <= 50) return 'text-amber-500'
   if (count <= 100) return 'text-amber-600'
-  if (count <= 150) return 'text-orange-500'
-  if (count <= 200) return 'text-orange-600'
+  if (count <= 200) return 'text-orange-500'
+  if (count <= 350) return 'text-orange-600'
+  if (count <= 500) return 'text-red-500'
   return 'font-semibold text-red-700'
 }
 
