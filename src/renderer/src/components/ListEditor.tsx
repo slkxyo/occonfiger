@@ -1,5 +1,5 @@
-import { Box, Button, HStack, Text } from '@chakra-ui/react'
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
 import { getAt } from '../fields/path'
 import { useConfigStore } from '../store/configStore'
 import { enterStyle } from './motion'
@@ -13,18 +13,11 @@ function ListItem(props: {
   children: React.ReactNode
 }): React.JSX.Element {
   const [open, setOpen] = useState(!props.defaultCollapsed)
-  const content = <Box pt="12px">{props.children}</Box>
+  const content = <div className="pt-3">{props.children}</div>
   return (
-    <Box
-      borderWidth="1px"
-      borderColor="border.default"
-      borderRadius="card"
-      p="16px"
-      mb="12px"
-      bg="bg.default"
-    >
-      <HStack justify="space-between">
-        <HStack gap="12px">
+    <div className="mb-3 rounded-xl border border-border bg-background p-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
           {props.collapsible ? (
             <Button
               size="sm"
@@ -32,33 +25,29 @@ function ListItem(props: {
               aria-expanded={open}
               aria-label={`${open ? '折叠' : '展开'} ${props.name}`}
               onClick={() => setOpen((v) => !v)}
+              className="justify-start"
             >
-              <Text fontFamily="mono" fontSize="sm" fontWeight="medium">
-                <Box
-                  as="span"
-                  className="oc-rotate"
-                  display="inline-block"
-                  transition="transform 200ms cubic-bezier(0.16, 1, 0.3, 1)"
-                  transform={open ? 'rotate(90deg)' : 'rotate(0deg)'}
+              <span className="font-mono text-sm font-medium">
+                <span
+                  className="oc-rotate inline-block transition-transform duration-200"
+                  style={{ transform: open ? 'rotate(90deg)' : 'rotate(0deg)' }}
                 >
                   ▸
-                </Box>{' '}
+                </span>{' '}
                 {props.name}
-              </Text>
+              </span>
             </Button>
           ) : (
-            <Text fontFamily="mono" fontSize="sm" fontWeight="medium">
-              {props.name}
-            </Text>
+            <span className="font-mono text-sm font-medium">{props.name}</span>
           )}
           {props.accessory}
-        </HStack>
-        <Button size="xs" variant="ghost" colorPalette="error" onClick={props.onDelete}>
+        </div>
+        <Button size="xs" variant="destructive" onClick={props.onDelete}>
           删除
         </Button>
-      </HStack>
+      </div>
       {props.collapsible ? (open ? content : null) : content}
-    </Box>
+    </div>
   )
 }
 
@@ -81,9 +70,9 @@ export function ListEditor(props: {
   const keys = props.sortKeys ? props.sortKeys(rawKeys, record) : rawKeys
 
   return (
-    <Box>
+    <div>
       {keys.map((key, index) => (
-        <Box key={key} className="oc-enter" style={enterStyle(index)}>
+        <div key={key} className="oc-enter" style={enterStyle(index)}>
           <ListItem
             name={key}
             collapsible={props.collapsible === true}
@@ -93,8 +82,8 @@ export function ListEditor(props: {
           >
             {props.children(key)}
           </ListItem>
-        </Box>
+        </div>
       ))}
-    </Box>
+    </div>
   )
 }

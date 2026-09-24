@@ -1,4 +1,4 @@
-import { Button } from '@chakra-ui/react'
+import { Button } from '@/components/ui/button'
 import { Monitor, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { nextTheme, type ThemeName } from './theme-order'
@@ -13,7 +13,7 @@ export function ColorModeButton(): React.JSX.Element {
   const next = nextTheme(current)
   return (
     <Button
-      size="sm"
+      size="icon-sm"
       variant="ghost"
       aria-label={`主题：${LABELS[current]}，点击切换为${LABELS[next]}`}
       onClick={() => setTheme(next)}

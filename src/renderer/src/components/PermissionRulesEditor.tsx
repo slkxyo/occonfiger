@@ -1,5 +1,6 @@
-import { Box, Button, HStack, IconButton, Input, Text, VStack } from '@chakra-ui/react'
 import { ArrowDown, ArrowUp, Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Field } from '../fields/Field'
 import { MenuSelect } from '../fields/MenuSelect'
 import { useConfigStore } from '../store/configStore'
@@ -67,43 +68,34 @@ export function PermissionRulesEditor(): React.JSX.Element {
   return (
     <Field label="权限规则" description="按顺序匹配，最后一条匹配的规则生效。action 支持通配 *。">
       {rules.length === 0 ? (
-        <Text fontSize="sm" color="fg.muted">
-          未配置权限规则
-        </Text>
+        <p className="text-sm text-muted-foreground">未配置权限规则</p>
       ) : (
-        <VStack align="stretch" gap="8px" mb="8px">
+        <div className="mb-2 flex flex-col gap-2">
           {rules.map((rule, index) => (
-            <Box
+            <div
               key={index}
-              className="oc-enter"
+              className="oc-enter rounded-xl border border-border bg-background p-2.5"
               style={enterStyle(index)}
-              borderWidth="1px"
-              borderColor="border.default"
-              borderRadius="card"
-              p="10px"
-              bg="bg.default"
             >
-              <HStack gap="8px" align="start">
-                <Box w="140px" flexShrink={0}>
+              <div className="flex items-start gap-2">
+                <div className="w-[140px] shrink-0">
                   <Input
                     aria-label={`权限动作 ${index}`}
                     list="oc-permission-actions"
-                    size="sm"
-                    fontFamily="mono"
+                    className="font-mono"
                     value={rule.action}
                     placeholder="action"
                     onChange={(e) => update(index, { action: e.target.value })}
                   />
-                </Box>
+                </div>
                 <Input
                   aria-label={`资源 ${index}`}
-                  size="sm"
-                  fontFamily="mono"
+                  className="font-mono"
                   value={rule.resource}
                   placeholder="*"
                   onChange={(e) => update(index, { resource: e.target.value })}
                 />
-                <Box w="120px" flexShrink={0}>
+                <div className="w-[120px] shrink-0">
                   <MenuSelect
                     ariaLabel={`效果 ${index}`}
                     options={EFFECTS}
@@ -111,40 +103,39 @@ export function PermissionRulesEditor(): React.JSX.Element {
                     allowEmpty={false}
                     onChange={(v) => update(index, { effect: v as Rule['effect'] })}
                   />
-                </Box>
-                <HStack gap="2px" flexShrink={0}>
-                  <IconButton
+                </div>
+                <div className="flex shrink-0 gap-0.5">
+                  <Button
                     aria-label={`上移规则 ${index}`}
-                    size="sm"
+                    size="icon-sm"
                     variant="ghost"
                     disabled={index === 0}
                     onClick={() => move(index, -1)}
                   >
                     <ArrowUp size={14} />
-                  </IconButton>
-                  <IconButton
+                  </Button>
+                  <Button
                     aria-label={`下移规则 ${index}`}
-                    size="sm"
+                    size="icon-sm"
                     variant="ghost"
                     disabled={index === rules.length - 1}
                     onClick={() => move(index, 1)}
                   >
                     <ArrowDown size={14} />
-                  </IconButton>
-                  <IconButton
+                  </Button>
+                  <Button
                     aria-label={`删除规则 ${index}`}
-                    size="sm"
-                    variant="ghost"
-                    colorPalette="error"
+                    size="icon-sm"
+                    variant="destructive"
                     onClick={() => remove(index)}
                   >
                     ×
-                  </IconButton>
-                </HStack>
-              </HStack>
-            </Box>
+                  </Button>
+                </div>
+              </div>
+            </div>
           ))}
-        </VStack>
+        </div>
       )}
       <datalist id="oc-permission-actions">
         {ACTION_SUGGESTIONS.map((action) => (

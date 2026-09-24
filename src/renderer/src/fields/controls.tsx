@@ -1,4 +1,7 @@
-import { HStack, IconButton, Input, Switch, Text, Textarea } from '@chakra-ui/react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import { Field } from './Field'
 import { MenuSelect } from './MenuSelect'
 import { useField } from './useField'
@@ -66,24 +69,24 @@ export function OAuthField(props: {
   if (typeof value === 'object' && value !== null) {
     return (
       <Field label={props.label} description={props.description}>
-        <Text fontSize="sm" color="fg.muted">
+        <p className="text-sm text-muted-foreground">
           {props.objectHint ?? '当前为对象配置，暂不支持可视化编辑'}
-        </Text>
+        </p>
       </Field>
     )
   }
   return (
     <Field label={props.label} description={props.description}>
-      <Switch.Root
-        checked={value === false}
-        onCheckedChange={(e) =>
-          e.checked ? set(false, { immediate: true }) : clear({ immediate: true })
-        }
-      >
-        <Switch.HiddenInput aria-label="禁用自动检测" />
-        <Switch.Control />
-        <Switch.Label>禁用自动检测</Switch.Label>
-      </Switch.Root>
+      <div className="flex items-center gap-2">
+        <Switch
+          aria-label="禁用自动检测"
+          checked={value === false}
+          onCheckedChange={(checked) =>
+            checked ? set(false, { immediate: true }) : clear({ immediate: true })
+          }
+        />
+        <span className="text-sm">禁用自动检测</span>
+      </div>
     </Field>
   )
 }
@@ -133,15 +136,13 @@ export function TagsField(props: {
         }}
       />
       {items.length > 0 ? (
-        <HStack mt="8px" gap="8px" wrap="wrap">
+        <div className="mt-2 flex flex-wrap gap-2">
           {items.map((item) => (
-            <HStack key={item} gap="4px" bg="bg.muted" borderRadius="control" px="8px" py="2px">
-              <Text fontSize="xs" fontFamily="mono">
-                {item}
-              </Text>
-              <IconButton
+            <div key={item} className="flex items-center gap-1 rounded-md bg-muted px-2 py-0.5">
+              <span className="font-mono text-xs">{item}</span>
+              <Button
                 aria-label={`删除 ${item}`}
-                size="2xs"
+                size="icon-xs"
                 variant="ghost"
                 onClick={() =>
                   set(
@@ -151,10 +152,10 @@ export function TagsField(props: {
                 }
               >
                 ×
-              </IconButton>
-            </HStack>
+              </Button>
+            </div>
           ))}
-        </HStack>
+        </div>
       ) : null}
     </Field>
   )

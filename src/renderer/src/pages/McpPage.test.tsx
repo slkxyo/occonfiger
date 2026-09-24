@@ -72,7 +72,7 @@ describe('McpPage', () => {
       </Provider>
     )
     await expand('exa')
-    const oauth = screen.getByRole('checkbox', { name: '禁用自动检测' })
+    const oauth = screen.getByRole('switch', { name: '禁用自动检测' })
     expect(oauth).not.toBeChecked()
     await userEvent.click(oauth)
     expect(useConfigStore.getState().draft.mcp).toEqual({
@@ -94,7 +94,7 @@ describe('McpPage', () => {
       </Provider>
     )
     await expand('exa')
-    expect(screen.queryByRole('checkbox', { name: '禁用自动检测' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('switch', { name: '禁用自动检测' })).not.toBeInTheDocument()
     expect(screen.getByText('当前为 OAuth 对象配置，暂不支持可视化编辑')).toBeInTheDocument()
     expect(useConfigStore.getState().draft.mcp).toEqual({
       servers: { exa: { type: 'remote', url: 'https://x', oauth: { client_id: 'abc' } } }
@@ -111,7 +111,7 @@ describe('McpPage', () => {
       </Provider>
     )
     await expand('exa')
-    const oauth = screen.getByRole('checkbox', { name: '禁用自动检测' })
+    const oauth = screen.getByRole('switch', { name: '禁用自动检测' })
     expect(oauth).toBeChecked()
     await userEvent.click(oauth)
     expect(useConfigStore.getState().draft.mcp).toEqual({

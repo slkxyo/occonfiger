@@ -1,4 +1,11 @@
-import { Box, Flex, Heading, Text } from '@chakra-ui/react'
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card'
 
 export function Section(props: {
   title: string
@@ -7,25 +14,13 @@ export function Section(props: {
   children: React.ReactNode
 }): React.JSX.Element {
   return (
-    <Box
-      as="section"
-      bg="bg.subtle"
-      borderWidth="1px"
-      borderColor="border.default"
-      borderRadius="card"
-      p="20px"
-      mb="16px"
-    >
-      <Flex justify="space-between" align="start" gap="12px" mb="4px">
-        <Heading size="md">{props.title}</Heading>
-        {props.action ? <Box flexShrink={0}>{props.action}</Box> : null}
-      </Flex>
-      {props.description ? (
-        <Text fontSize="sm" color="fg.muted" mb="16px">
-          {props.description}
-        </Text>
-      ) : null}
-      {props.children}
-    </Box>
+    <Card className="mb-4">
+      <CardHeader>
+        <CardTitle>{props.title}</CardTitle>
+        {props.action ? <CardAction>{props.action}</CardAction> : null}
+        {props.description ? <CardDescription>{props.description}</CardDescription> : null}
+      </CardHeader>
+      <CardContent>{props.children}</CardContent>
+    </Card>
   )
 }

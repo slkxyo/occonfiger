@@ -1,5 +1,7 @@
-import { Button, HStack, IconButton, Input, Switch } from '@chakra-ui/react'
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
 import { Field } from '../fields/Field'
 import { useField } from '../fields/useField'
 import type { ChangeOptions } from '../store/configStore'
@@ -55,20 +57,18 @@ export function KeyValueEditor(props: {
   return (
     <Field label={props.label} description={props.description}>
       {entries.map(([key, item]) => (
-        <HStack key={key} mb="8px">
+        <div key={key} className="mb-2 flex items-center gap-2">
           <Input
             aria-label={`${props.label} 键 ${key}`}
             defaultValue={key}
             onBlur={(e) => renameKey(key, e.target.value)}
           />
           {booleanValue ? (
-            <Switch.Root
+            <Switch
+              aria-label={`${props.label} 值 ${key}`}
               checked={item === true}
-              onCheckedChange={(e) => setValue(key, e.checked, { immediate: true })}
-            >
-              <Switch.HiddenInput aria-label={`${props.label} 值 ${key}`} />
-              <Switch.Control />
-            </Switch.Root>
+              onCheckedChange={(checked) => setValue(key, checked, { immediate: true })}
+            />
           ) : (
             <Input
               aria-label={`${props.label} 值 ${key}`}
@@ -77,18 +77,17 @@ export function KeyValueEditor(props: {
               onBlur={() => flush()}
             />
           )}
-          <IconButton
+          <Button
             aria-label={`删除 ${props.label} ${key}`}
-            size="sm"
-            variant="ghost"
-            colorPalette="error"
+            size="icon-sm"
+            variant="destructive"
             onClick={() => removeKey(key)}
           >
             ×
-          </IconButton>
-        </HStack>
+          </Button>
+        </div>
       ))}
-      <HStack>
+      <div className="flex items-center gap-2">
         <Input
           aria-label={`${props.label} 新键`}
           placeholder="键"
@@ -96,10 +95,11 @@ export function KeyValueEditor(props: {
           onChange={(e) => setNewKey(e.target.value)}
         />
         {booleanValue ? (
-          <Switch.Root checked={newBoolean} onCheckedChange={(e) => setNewBoolean(e.checked)}>
-            <Switch.HiddenInput aria-label={`${props.label} 新值`} />
-            <Switch.Control />
-          </Switch.Root>
+          <Switch
+            aria-label={`${props.label} 新值`}
+            checked={newBoolean}
+            onCheckedChange={setNewBoolean}
+          />
         ) : (
           <Input
             aria-label={`${props.label} 新值`}
@@ -108,10 +108,10 @@ export function KeyValueEditor(props: {
             onChange={(e) => setNewValue(e.target.value)}
           />
         )}
-        <Button size="sm" colorPalette="accent" onClick={addEntry}>
+        <Button size="sm" onClick={addEntry}>
           添加{props.label}
         </Button>
-      </HStack>
+      </div>
     </Field>
   )
 }

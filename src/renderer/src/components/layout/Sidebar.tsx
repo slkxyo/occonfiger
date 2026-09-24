@@ -1,6 +1,6 @@
-import { Box, Button, Flex, Text, VStack } from '@chakra-ui/react'
 import { Menu } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { ColorModeButton } from '../app/color-mode'
 
 export type NavItem = { id: string; label: string; icon?: LucideIcon }
@@ -13,73 +13,46 @@ export function Sidebar(props: {
   onToggleCollapse: () => void
 }): React.JSX.Element {
   return (
-    <Flex
-      as="nav"
-      direction="column"
-      w={props.collapsed ? '64px' : '220px'}
-      h="100%"
-      flexShrink={0}
-      borderRightWidth="1px"
-      borderColor="border.default"
-      bg="bg.subtle"
-      py="12px"
-      px="8px"
-      transition="width 0.15s ease"
+    <nav
+      className="flex h-full shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-2 py-3 transition-[width] duration-150 ease-out"
+      style={{ width: props.collapsed ? '64px' : '220px' }}
     >
-      <VStack flex="1" minH="0" overflowY="auto" align="stretch" gap="2px">
+      <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
         {props.items.map((item) => {
           const Icon = item.icon
           return (
             <Button
               key={item.id}
-              variant={props.active === item.id ? 'subtle' : 'ghost'}
-              colorPalette={props.active === item.id ? 'accent' : undefined}
-              justifyContent="flex-start"
-              gap="0px"
+              variant={props.active === item.id ? 'secondary' : 'ghost'}
               size="sm"
-              flexShrink={0}
-              w="100%"
-              minW="0"
+              className="w-full min-w-0 shrink-0 justify-start gap-0"
               title={item.label}
               aria-label={item.label}
               onClick={() => props.onNavigate(item.id)}
             >
               {Icon ? (
-                <Box
-                  as="span"
-                  display="inline-flex"
-                  flexShrink={0}
-                  ml={props.collapsed ? 'calc(50% - 9px)' : '0px'}
-                  transition="margin-left 0.18s ease"
+                <span
+                  className="inline-flex shrink-0 transition-[margin-left] duration-[180ms] ease-out"
+                  style={{ marginLeft: props.collapsed ? 'calc(50% - 9px)' : '0px' }}
                 >
                   <Icon size={18} />
-                </Box>
+                </span>
               ) : null}
-              <Text
-                as="span"
-                display="block"
-                fontSize="sm"
-                overflow="hidden"
-                whiteSpace="nowrap"
-                ml={props.collapsed ? '0px' : '8px'}
-                maxW={props.collapsed ? '0px' : '170px'}
-                opacity={props.collapsed ? 0 : 1}
-                transition="max-width 0.18s ease, opacity 0.18s ease, margin-left 0.18s ease"
+              <span
+                className="block overflow-hidden text-sm whitespace-nowrap transition-[max-width,opacity,margin-left] duration-[180ms] ease-out"
+                style={{
+                  marginLeft: props.collapsed ? '0px' : '8px',
+                  maxWidth: props.collapsed ? '0px' : '170px',
+                  opacity: props.collapsed ? 0 : 1
+                }}
               >
                 {item.label}
-              </Text>
+              </span>
             </Button>
           )
         })}
-      </VStack>
-      <VStack
-        gap="4px"
-        pt="8px"
-        mt="8px"
-        borderTopWidth="1px"
-        borderColor="border.default"
-        align="center"
-      >
+      </div>
+      <div className="mt-2 flex flex-col items-center gap-1 border-t border-sidebar-border pt-2">
         <ColorModeButton />
         <Button
           size="sm"
@@ -89,7 +62,7 @@ export function Sidebar(props: {
         >
           <Menu size={16} />
         </Button>
-      </VStack>
-    </Flex>
+      </div>
+    </nav>
   )
 }

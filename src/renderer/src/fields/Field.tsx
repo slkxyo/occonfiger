@@ -1,4 +1,4 @@
-import { Box, Text } from '@chakra-ui/react'
+import { Label } from '@/components/ui/label'
 
 export function Field(props: {
   label: string
@@ -6,16 +6,12 @@ export function Field(props: {
   children: React.ReactNode
 }): React.JSX.Element {
   return (
-    <Box mb="16px">
-      <Text as="label" display="block" fontSize="sm" fontWeight="medium" mb="4px">
-        {props.label}
-      </Text>
+    <div className="mb-4">
+      <Label className="mb-1 block">{props.label}</Label>
       {props.children}
       {props.description ? (
-        <Text fontSize="xs" color="fg.muted" mt="4px">
-          {props.description}
-        </Text>
+        <p className="mt-1 text-xs text-muted-foreground">{props.description}</p>
       ) : null}
-    </Box>
+    </div>
   )
 }
