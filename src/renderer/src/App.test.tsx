@@ -11,6 +11,7 @@ function stubApi(overrides: Record<string, unknown> = {}): void {
     }),
     saveConfig: vi.fn().mockResolvedValue([]),
     listPlugins: vi.fn().mockResolvedValue([]),
+    listSessions: vi.fn().mockResolvedValue([]),
     ...overrides
   })
 }
@@ -80,5 +81,17 @@ describe('App', () => {
     await screen.findByRole('button', { name: '展开 exa' })
     await userEvent.click(screen.getByRole('button', { name: '插件管理' }))
     expect(await screen.findByText(/尚未配置任何插件/)).toBeInTheDocument()
+  })
+
+  it('navigates to the session manager', async () => {
+    stubApi()
+    render(
+      <Provider>
+        <App />
+      </Provider>
+    )
+    await screen.findByRole('button', { name: '展开 exa' })
+    await userEvent.click(screen.getByRole('button', { name: '会话管理' }))
+    expect(await screen.findByText(/暂无会话/)).toBeInTheDocument()
   })
 })

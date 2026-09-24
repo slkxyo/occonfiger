@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Box, Button, Text } from '@chakra-ui/react'
-import { FolderOpen, KeyRound, MessageSquareText, Plug, Puzzle, Settings } from 'lucide-react'
+import {
+  FolderOpen,
+  History,
+  KeyRound,
+  MessageSquareText,
+  Plug,
+  Puzzle,
+  Settings
+} from 'lucide-react'
 import { AppLayout } from './components/layout/AppLayout'
 import { useConfigStore } from './store/configStore'
 import { useAutoSave } from './hooks/useAutoSave'
@@ -10,6 +18,7 @@ import { FileManagerPage } from './pages/FileManagerPage'
 import { AgentsPage } from './pages/AgentsPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { PluginPage } from './pages/PluginPage'
+import { SessionsPage } from './pages/SessionsPage'
 
 const NAV = [
   { id: 'settings', label: '全局设置', icon: Settings },
@@ -17,7 +26,8 @@ const NAV = [
   { id: 'plugins', label: '插件管理', icon: Puzzle },
   { id: 'prompt', label: '全局提示词', icon: MessageSquareText },
   { id: 'credentials', label: '服务商凭证', icon: KeyRound },
-  { id: 'files', label: 'SKILL 管理', icon: FolderOpen }
+  { id: 'files', label: 'SKILL 管理', icon: FolderOpen },
+  { id: 'sessions', label: '会话管理', icon: History }
 ]
 
 function CurrentPage({ id }: { id: string }): React.JSX.Element {
@@ -27,6 +37,7 @@ function CurrentPage({ id }: { id: string }): React.JSX.Element {
   if (id === 'prompt') return <AgentsPage />
   if (id === 'settings') return <SettingsPage />
   if (id === 'plugins') return <PluginPage />
+  if (id === 'sessions') return <SessionsPage />
   return <Text color="fg.muted">页面不存在。</Text>
 }
 
