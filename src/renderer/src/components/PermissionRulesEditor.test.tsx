@@ -60,6 +60,21 @@ describe('PermissionRulesEditor', () => {
     expect(actions.map((r) => r.action)).toEqual(['edit', 'read'])
   })
 
+  it('changes a rule effect via the styled effect selector', async () => {
+    render(
+      <Provider>
+        <PermissionRulesEditor />
+      </Provider>
+    )
+    const trigger = screen.getByRole('combobox', { name: '效果 0' })
+    // 当前 effect=ask，trigger 显示中文标签「询问」+ 圆点
+    expect(trigger).toHaveTextContent('询问')
+    await userEvent.click(trigger)
+    await userEvent.click(await screen.findByRole('option', { name: /拒绝/ }))
+    const rules = useConfigStore.getState().draft.permissions as { effect: string }[]
+    expect(rules[0].effect).toBe('deny')
+  })
+
   it('shows empty state when no rules', () => {
     useConfigStore.getState().loadConfig({})
     render(

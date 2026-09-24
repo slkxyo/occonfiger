@@ -1,14 +1,69 @@
 import { ArrowDown, ArrowUp, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
+import { cn } from 'cn'
 import { Field } from '../fields/Field'
-import { MenuSelect } from '../fields/MenuSelect'
 import { useConfigStore } from '../store/configStore'
 import { enterStyle } from './motion'
 
 type Rule = { action: string; resource: string; effect: 'allow' | 'ask' | 'deny' }
 
-const EFFECTS = ['allow', 'ask', 'deny']
+const EFFECTS = ['allow', 'ask', 'deny'] as const
+
+// 权限效果元数据：中文标签 + 圆点色 + 文字色（绿=允许、琥珀=询问、红=拒绝）
+const EFFECT_META: Record<Rule['effect'], { label: string; dot: string; text: string }> = {
+  allow: {
+    label: '允许',
+    dot: 'bg-emerald-500',
+    text: 'text-emerald-600 dark:text-emerald-400'
+  },
+  ask: {
+    label: '询问',
+    dot: 'bg-amber-500',
+    text: 'text-amber-600 dark:text-amber-400'
+  },
+  deny: {
+    label: '拒绝',
+    dot: 'bg-red-500',
+    text: 'text-red-600 dark:text-red-400'
+  }
+}
+
+function EffectSelect(props: {
+  value: Rule['effect']
+  onChange: (v: Rule['effect']) => void
+  ariaLabel: string
+}): React.JSX.Element {
+  const meta = EFFECT_META[props.value] ?? EFFECT_META.ask
+  return (
+    <Select
+      value={props.value}
+      onValueChange={(v) => props.onChange(typeof v === 'string' ? (v as Rule['effect']) : 'ask')}
+    >
+      <SelectTrigger aria-label={props.ariaLabel} className={cn('w-full font-medium', meta.text)}>
+        <span className="flex items-center gap-1.5">
+          <span className={cn('size-2 rounded-full', meta.dot)} aria-hidden="true" />
+          <span>{meta.label}</span>
+        </span>
+      </SelectTrigger>
+      <SelectContent>
+        {EFFECTS.map((eff) => {
+          const m = EFFECT_META[eff]
+          return (
+            <SelectItem key={eff} value={eff}>
+              <span className="flex items-center gap-2">
+                <span className={cn('size-2 rounded-full', m.dot)} aria-hidden="true" />
+                <span className={cn('font-medium', m.text)}>{m.label}</span>
+                <span className="text-xs text-muted-foreground">{eff}</span>
+              </span>
+            </SelectItem>
+          )
+        })}
+      </SelectContent>
+    </Select>
+  )
+}
 
 const ACTION_SUGGESTIONS = [
   '*',
@@ -96,12 +151,10 @@ export function PermissionRulesEditor(): React.JSX.Element {
                   onChange={(e) => update(index, { resource: e.target.value })}
                 />
                 <div className="w-[120px] shrink-0">
-                  <MenuSelect
+                  <EffectSelect
                     ariaLabel={`效果 ${index}`}
-                    options={EFFECTS}
                     value={rule.effect}
-                    allowEmpty={false}
-                    onChange={(v) => update(index, { effect: v as Rule['effect'] })}
+                    onChange={(v) => update(index, { effect: v })}
                   />
                 </div>
                 <div className="flex shrink-0 gap-0.5">
