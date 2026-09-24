@@ -56,6 +56,13 @@ function messageCountClass(count: number): string {
   return 'font-semibold text-red-700'
 }
 
+// 会话活跃判定阈值：5 分钟内有更新视为可能正在进行
+const LIVE_THRESHOLD_MS = 5 * 60 * 1000
+
+function isLive(session: SessionSummary): boolean {
+  return Date.now() - session.timeUpdated < LIVE_THRESHOLD_MS
+}
+
 export function SessionsPage(): React.JSX.Element {
   const [sessions, setSessions] = useState<SessionSummary[]>([])
   const [query, setQuery] = useState('')
@@ -150,8 +157,9 @@ export function SessionsPage(): React.JSX.Element {
 
   const toggleAll = (): void => {
     setSelection((prev) => {
-      if (prev.size === filtered.length) return new Set()
-      return new Set(filtered.map((s) => s.id))
+      const deletable = filtered.filter((s) => !isLive(s))
+      if (deletable.length > 0 && deletable.every((s) => prev.has(s.id))) return new Set()
+      return new Set(deletable.map((s) => s.id))
     })
   }
 
@@ -179,7 +187,8 @@ export function SessionsPage(): React.JSX.Element {
     ? sessions.filter((session) => displayTitle(session.title).toLowerCase().includes(needle))
     : sessions
 
-  const allSelected = filtered.length > 0 && selection.size === filtered.length
+  const deletable = filtered.filter((s) => !isLive(s))
+  const allSelected = deletable.length > 0 && deletable.every((s) => selection.has(s.id))
 
   return (
     <Section
@@ -239,6 +248,7 @@ export function SessionsPage(): React.JSX.Element {
       {filtered.map((session, index) => {
         const title = displayTitle(session.title)
         const checked = selection.has(session.id)
+        const live = isLive(session)
         return (
           <Card key={session.id} size="sm" className="oc-enter mb-3" style={enterStyle(index)}>
             <CardContent className="flex items-start justify-between gap-3">
@@ -248,8 +258,9 @@ export function SessionsPage(): React.JSX.Element {
                     type="checkbox"
                     aria-label={`选择 ${title}`}
                     checked={checked}
+                    disabled={live}
                     onChange={() => toggleSelect(session.id)}
-                    className="mt-1 size-4 shrink-0 rounded border-border accent-primary"
+                    className="mt-1 size-4 shrink-0 rounded border-border accent-primary disabled:opacity-40"
                   />
                 ) : null}
                 <div className="min-w-0 flex-1">
@@ -261,6 +272,15 @@ export function SessionsPage(): React.JSX.Element {
                     >
                       {title}
                     </button>
+                    {live ? (
+                      <span
+                        title="会话进行中（5 分钟内有更新），不可删除"
+                        className="inline-flex items-center gap-1 shrink-0 text-xs text-green-600"
+                      >
+                        <span className="size-1.5 rounded-full bg-green-500" aria-hidden="true" />
+                        进行中
+                      </span>
+                    ) : null}
                     {session.timeArchived !== null ? (
                       <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
                         已归档
@@ -294,7 +314,8 @@ export function SessionsPage(): React.JSX.Element {
                   <Button
                     size="xs"
                     variant="destructive"
-                    aria-label={`删除 ${title}`}
+                    aria-label={live ? `删除 ${title}（进行中，不可删除）` : `删除 ${title}`}
+                    disabled={live}
                     onClick={() => remove(session)}
                   >
                     删除

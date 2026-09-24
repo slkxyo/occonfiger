@@ -260,6 +260,57 @@ describe('SessionsPage', () => {
     expect(screen.getByRole('checkbox', { name: '选择 beta 会话' })).not.toBeChecked()
   })
 
+  it('disables delete for a live session updated within 5 minutes', async () => {
+    stubApi({
+      listSessions: vi.fn().mockResolvedValue([
+        {
+          id: 'live',
+          title: '活跃会话',
+          directory: '/tmp/live',
+          timeCreated: 1_700_000_000_000,
+          timeUpdated: Date.now() - 60_000,
+          timeArchived: null,
+          messageCount: 5
+        }
+      ])
+    })
+    render(
+      <Provider>
+        <SessionsPage />
+      </Provider>
+    )
+    await screen.findByText('活跃会话')
+    expect(screen.getByRole('button', { name: /删除 活跃会话/ })).toBeDisabled()
+    expect(screen.getByText('进行中')).toBeInTheDocument()
+  })
+
+  it('disables selection for a live session in multi-select mode', async () => {
+    stubApi({
+      listSessions: vi.fn().mockResolvedValue([
+        {
+          id: 'live',
+          title: '活跃会话',
+          directory: '/tmp/live',
+          timeCreated: 1_700_000_000_000,
+          timeUpdated: Date.now() - 60_000,
+          timeArchived: null,
+          messageCount: 5
+        }
+      ])
+    })
+    render(
+      <Provider>
+        <SessionsPage />
+      </Provider>
+    )
+    await screen.findByText('活跃会话')
+    await userEvent.click(screen.getByRole('button', { name: '多选' }))
+    expect(screen.getByRole('checkbox', { name: '选择 活跃会话' })).toBeDisabled()
+    // 全选也不应选中 live 会话
+    await userEvent.click(screen.getByRole('button', { name: '全选' }))
+    expect(screen.getByRole('checkbox', { name: '选择 活跃会话' })).not.toBeChecked()
+  })
+
   it('shows an error when loading fails', async () => {
     stubApi({ listSessions: vi.fn().mockRejectedValue(new Error('数据库被占用')) })
     render(
