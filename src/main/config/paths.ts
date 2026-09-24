@@ -10,6 +10,7 @@ export type ConfigPaths = {
   disabledPluginsFile: string
   dataDir: string
   authFile: string
+  dbPath: string
 }
 
 export function resolvePaths(env: PathEnv = process.env as PathEnv): ConfigPaths {
@@ -22,6 +23,7 @@ export function resolvePaths(env: PathEnv = process.env as PathEnv): ConfigPaths
     agentsFile: join(configDir, 'AGENTS.md'),
     disabledPluginsFile: join(configDir, '.occonfiger', 'disabled-plugins.json'),
     dataDir,
-    authFile: join(dataDir, 'auth.json')
+    authFile: join(dataDir, 'auth.json'),
+    dbPath: join(dataDir, 'opencode.db')
   }
 }

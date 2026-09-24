@@ -11,6 +11,7 @@ import {
 } from './config/managedFiles'
 import { deleteCredential, listCredentials, updateCredentialKey } from './auth/io'
 import { deletePlugin, listPlugins, setPluginEnabled } from './config/plugins'
+import { deleteSession, listSessions, renameSession } from './session/repository'
 import { validateConfig } from './schema/validate'
 import { IPC } from '../shared/ipc-channels'
 
@@ -21,9 +22,19 @@ type Deps = {
   readConfig: typeof readConfig
   writeConfig: typeof writeConfig
   readRaw: typeof readRaw
+  listSessions?: typeof listSessions
+  renameSession?: typeof renameSession
+  deleteSession?: typeof deleteSession
 }
 
-const defaultDeps: Deps = { readConfig, writeConfig, readRaw }
+const defaultDeps: Deps = {
+  readConfig,
+  writeConfig,
+  readRaw,
+  listSessions,
+  renameSession,
+  deleteSession
+}
 
 function ok(data: unknown): { ok: true; data: unknown } {
   return { ok: true, data }
@@ -165,6 +176,30 @@ export function registerIpc(ipc: IpcLike, paths: ConfigPaths, deps: Deps = defau
   on(IPC.pluginsDelete, (name: string) => {
     try {
       deletePlugin(paths.configFile, paths.disabledPluginsFile, name)
+      return ok(null)
+    } catch (error) {
+      return fail(error)
+    }
+  })
+
+  on(IPC.sessionList, () => {
+    try {
+      return ok((deps.listSessions ?? listSessions)(paths.dbPath))
+    } catch (error) {
+      return fail(error)
+    }
+  })
+  on(IPC.sessionRename, (id: string, title: string) => {
+    try {
+      ;(deps.renameSession ?? renameSession)(paths.dbPath, id, title)
+      return ok(null)
+    } catch (error) {
+      return fail(error)
+    }
+  })
+  on(IPC.sessionDelete, (id: string) => {
+    try {
+      ;(deps.deleteSession ?? deleteSession)(paths.dbPath, id)
       return ok(null)
     } catch (error) {
       return fail(error)

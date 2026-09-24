@@ -73,4 +73,19 @@ describe('createApi', () => {
     expect(invoke).toHaveBeenNthCalledWith(2, IPC.pluginsSetEnabled, 'a', false)
     expect(invoke).toHaveBeenNthCalledWith(3, IPC.pluginsDelete, 'a')
   })
+
+  it('forwards session management calls', async () => {
+    const invoke = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, data: [{ id: 's1' }] })
+      .mockResolvedValueOnce({ ok: true, data: null })
+      .mockResolvedValueOnce({ ok: true, data: null })
+    const api = createApi(invoke)
+    await expect(api.listSessions()).resolves.toEqual([{ id: 's1' }])
+    await api.renameSession('s1', '新标题')
+    await api.deleteSession('s1')
+    expect(invoke).toHaveBeenNthCalledWith(1, IPC.sessionList)
+    expect(invoke).toHaveBeenNthCalledWith(2, IPC.sessionRename, 's1', '新标题')
+    expect(invoke).toHaveBeenNthCalledWith(3, IPC.sessionDelete, 's1')
+  })
 })

@@ -1,4 +1,5 @@
 import { IPC } from '../shared/ipc-channels'
+import type { SessionSummary } from '../shared/session-types'
 
 export type IpcResponse<T> = { ok: true; data: T } | { ok: false; error: string; data?: unknown }
 export type Invoke = (channel: string, ...args: unknown[]) => Promise<unknown>
@@ -22,6 +23,9 @@ export interface Api {
   listPlugins: () => Promise<{ name: string; enabled: boolean; spec: unknown }[]>
   setPluginEnabled: (name: string, enabled: boolean) => Promise<null>
   deletePlugin: (name: string) => Promise<null>
+  listSessions: () => Promise<SessionSummary[]>
+  renameSession: (id: string, title: string) => Promise<null>
+  deleteSession: (id: string) => Promise<null>
 }
 
 function toError(response: IpcResponse<unknown> | null | undefined): IpcError {
@@ -62,6 +66,10 @@ export function createApi(invoke: Invoke): Api {
       unwrap<{ name: string; enabled: boolean; spec: unknown }[]>(invoke, IPC.pluginsList),
     setPluginEnabled: (name: string, enabled: boolean) =>
       unwrap<null>(invoke, IPC.pluginsSetEnabled, name, enabled),
-    deletePlugin: (name: string) => unwrap<null>(invoke, IPC.pluginsDelete, name)
+    deletePlugin: (name: string) => unwrap<null>(invoke, IPC.pluginsDelete, name),
+    listSessions: () => unwrap<SessionSummary[]>(invoke, IPC.sessionList),
+    renameSession: (id: string, title: string) =>
+      unwrap<null>(invoke, IPC.sessionRename, id, title),
+    deleteSession: (id: string) => unwrap<null>(invoke, IPC.sessionDelete, id)
   }
 }

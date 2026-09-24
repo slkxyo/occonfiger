@@ -15,5 +15,8 @@ export const IPC = {
   filesOpen: 'files:open',
   pluginsList: 'plugins:list',
   pluginsSetEnabled: 'plugins:setEnabled',
-  pluginsDelete: 'plugins:delete'
+  pluginsDelete: 'plugins:delete',
+  sessionList: 'session:list',
+  sessionRename: 'session:rename',
+  sessionDelete: 'session:delete'
 } as const

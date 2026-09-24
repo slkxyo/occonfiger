@@ -30,7 +30,15 @@ const paths: ConfigPaths = {
   agentsFile: '/cfg/AGENTS.md',
   disabledPluginsFile: '/cfg/.occonfiger/disabled-plugins.json',
   dataDir: '/data',
-  authFile: '/data/auth.json'
+  authFile: '/data/auth.json',
+  dbPath: '/data/opencode.db'
+}
+
+// 会话 handler 测试用的基础依赖（只关心注入的 repository 函数）。
+const baseDeps = {
+  readConfig: () => ({ data: {} }),
+  writeConfig: () => undefined,
+  readRaw: () => null
 }
 
 describe('registerIpc', () => {
@@ -217,5 +225,67 @@ describe('registerIpc', () => {
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }
+  })
+
+  it('lists sessions through the injected repository', async () => {
+    const ipc = fakeIpc()
+    const seen: string[] = []
+    const summary = {
+      id: 's1',
+      title: '标题',
+      directory: '/w',
+      timeCreated: 1,
+      timeUpdated: 2,
+      timeArchived: null,
+      messageCount: 3
+    }
+    registerIpc(ipc, paths, {
+      ...baseDeps,
+      listSessions: (dbPath) => {
+        seen.push(dbPath)
+        return [summary]
+      }
+    })
+    expect(await ipc.invoke(IPC.sessionList)).toEqual({ ok: true, data: [summary] })
+    expect(seen).toEqual(['/data/opencode.db'])
+  })
+
+  it('renames a session with the id and title', async () => {
+    const ipc = fakeIpc()
+    const calls: unknown[] = []
+    registerIpc(ipc, paths, {
+      ...baseDeps,
+      renameSession: (dbPath, id, title) => {
+        calls.push(dbPath, id, title)
+      }
+    })
+    expect(await ipc.invoke(IPC.sessionRename, 's1', '新标题')).toEqual({ ok: true, data: null })
+    expect(calls).toEqual(['/data/opencode.db', 's1', '新标题'])
+  })
+
+  it('deletes a session with the id', async () => {
+    const ipc = fakeIpc()
+    const calls: unknown[] = []
+    registerIpc(ipc, paths, {
+      ...baseDeps,
+      deleteSession: (dbPath, id) => {
+        calls.push(dbPath, id)
+      }
+    })
+    expect(await ipc.invoke(IPC.sessionDelete, 's1')).toEqual({ ok: true, data: null })
+    expect(calls).toEqual(['/data/opencode.db', 's1'])
+  })
+
+  it('wraps session repository failures', async () => {
+    const ipc = fakeIpc()
+    registerIpc(ipc, paths, {
+      ...baseDeps,
+      deleteSession: () => {
+        throw new Error('数据库被锁定')
+      }
+    })
+    const result = (await ipc.invoke(IPC.sessionDelete, 's1')) as { ok: boolean; error?: string }
+    expect(result.ok).toBe(false)
+    expect(result.error).toBe('数据库被锁定')
   })
 })

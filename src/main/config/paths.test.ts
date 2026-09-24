@@ -11,6 +11,7 @@ describe('resolvePaths', () => {
     expect(p.configDir).toBe('/x/cfg/opencode')
     expect(p.dataDir).toBe('/x/data/opencode')
     expect(p.authFile).toBe('/x/data/opencode/auth.json')
+    expect(p.dbPath).toBe('/x/data/opencode/opencode.db')
   })
 
   it('falls back to HOME defaults', () => {
