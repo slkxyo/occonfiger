@@ -1,4 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -33,6 +43,7 @@ export function SessionsPage(): React.JSX.Element {
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
+  const [confirmTarget, setConfirmTarget] = useState<SessionSummary | null>(null)
   const skipBlur = useRef(false)
 
   const reload = useCallback((): Promise<void> => {
@@ -78,15 +89,17 @@ export function SessionsPage(): React.JSX.Element {
   }
 
   const remove = (session: SessionSummary): void => {
-    const title = displayTitle(session.title)
-    const confirmed = window.confirm(
-      `确定删除会话「${title}」吗？\n此操作不可恢复，会一并删除其所有子会话和消息。\n建议先关闭 opencode 后再删除，避免运行中的 opencode 数据不一致。`
-    )
-    if (!confirmed) return
+    setConfirmTarget(session)
+  }
+
+  const confirmDelete = (): void => {
+    const target = confirmTarget
+    if (target === null) return
     window.api
-      .deleteSession(session.id)
+      .deleteSession(target.id)
       .then(() => reload())
       .catch((e: unknown) => setError(toMessage(e)))
+      .finally(() => setConfirmTarget(null))
   }
 
   const needle = query.trim().toLowerCase()
@@ -197,6 +210,30 @@ export function SessionsPage(): React.JSX.Element {
           </Card>
         )
       })}
+
+      <AlertDialog
+        open={confirmTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmTarget(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>删除会话</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmTarget !== null
+                ? `确定删除会话「${displayTitle(confirmTarget.title)}」吗？此操作不可恢复，会一并删除其所有子会话和消息。建议先关闭 opencode 后再删除，避免运行中的 opencode 数据不一致。`
+                : ''}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={confirmDelete}>
+              删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Section>
   )
 }

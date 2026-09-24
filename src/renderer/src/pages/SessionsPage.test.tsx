@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Provider } from '../components/app/provider'
 import { SessionsPage } from './SessionsPage'
@@ -164,7 +164,6 @@ describe('SessionsPage', () => {
 
   it('deletes a session after confirmation', async () => {
     const deleteSession = vi.fn().mockResolvedValue(null)
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
     stubApi({ deleteSession })
     render(
       <Provider>
@@ -173,13 +172,13 @@ describe('SessionsPage', () => {
     )
     await screen.findByText('beta 会话')
     await userEvent.click(screen.getByRole('button', { name: '删除 beta 会话' }))
-    expect(window.confirm).toHaveBeenCalled()
+    const dialog = await screen.findByRole('alertdialog')
+    await userEvent.click(within(dialog).getByRole('button', { name: '删除' }))
     await waitFor(() => expect(deleteSession).toHaveBeenCalledWith('beta'))
   })
 
   it('does not delete when confirmation is cancelled', async () => {
     const deleteSession = vi.fn().mockResolvedValue(null)
-    vi.spyOn(window, 'confirm').mockReturnValue(false)
     stubApi({ deleteSession })
     render(
       <Provider>
@@ -188,6 +187,8 @@ describe('SessionsPage', () => {
     )
     await screen.findByText('beta 会话')
     await userEvent.click(screen.getByRole('button', { name: '删除 beta 会话' }))
+    const dialog = await screen.findByRole('alertdialog')
+    await userEvent.click(within(dialog).getByRole('button', { name: '取消' }))
     expect(deleteSession).not.toHaveBeenCalled()
   })
 
