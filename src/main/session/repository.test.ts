@@ -52,7 +52,8 @@ function seedDatabase(): void {
       ('s-grand', 'p1', 's-child', '/work/b', '孙会话', '2', 100, 960, NULL);
     INSERT INTO session_message (id, session_id, type, seq, time_created, time_updated, data) VALUES
       ('m1', 's-new', 'user', 1, 100, 100, '{}'),
-      ('m2', 's-new', 'assistant', 2, 101, 101, '{}'),
+      ('m2', 's-new', 'assistant', 2, 101, 101, '{"tokens":{"input":100,"cache":{"read":9000,"write":0}}}'),
+      ('m6', 's-new', 'assistant', 3, 105, 105, '{"tokens":{"input":200,"cache":{"read":5000,"write":0}}}'),
       ('m3', 's-child', 'user', 1, 102, 102, '{}'),
       ('m4', 's-grand', 'user', 1, 103, 103, '{}'),
       ('m5', 's-old', 'user', 1, 104, 104, '{}');
@@ -84,7 +85,8 @@ describe('listSessions', () => {
       timeCreated: 100,
       timeUpdated: 900,
       timeArchived: null,
-      messageCount: 2
+      messageCount: 3,
+      contextSize: 5200
     })
     expect(sessions.find((s) => s.id === 's-mid')).toMatchObject({
       title: null,
@@ -92,6 +94,13 @@ describe('listSessions', () => {
       messageCount: 0
     })
     expect(sessions.find((s) => s.id === 's-old')).toMatchObject({ messageCount: 1 })
+  })
+
+  it('contextSize 取最后一条带 tokens 的 assistant 消息，缺失则为 0', () => {
+    const sessions = listSessions(dbPath)
+    expect(sessions.find((s) => s.id === 's-new')?.contextSize).toBe(5200)
+    expect(sessions.find((s) => s.id === 's-mid')?.contextSize).toBe(0)
+    expect(sessions.find((s) => s.id === 's-old')?.contextSize).toBe(0)
   })
 })
 

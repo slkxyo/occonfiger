@@ -237,7 +237,8 @@ describe('registerIpc', () => {
       timeCreated: 1,
       timeUpdated: 2,
       timeArchived: null,
-      messageCount: 3
+      messageCount: 3,
+      contextSize: 0
     }
     registerIpc(ipc, paths, {
       ...baseDeps,

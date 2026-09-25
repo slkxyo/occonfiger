@@ -3,7 +3,16 @@ import { withReadOnlyDb, withReadWriteDb } from './db'
 
 const SELECT_SESSIONS = `
   SELECT s.id, s.title, s.directory, s.time_created, s.time_updated, s.time_archived,
-         (SELECT COUNT(*) FROM session_message m WHERE m.session_id = s.id) AS message_count
+         (SELECT COUNT(*) FROM session_message m WHERE m.session_id = s.id) AS message_count,
+         (SELECT COALESCE(json_extract(m.data, '$.tokens.input'), 0)
+               + COALESCE(json_extract(m.data, '$.tokens.cache.read'), 0)
+               + COALESCE(json_extract(m.data, '$.tokens.cache.write'), 0)
+            FROM session_message m
+           WHERE m.session_id = s.id
+             AND m.type = 'assistant'
+             AND json_extract(m.data, '$.tokens.input') IS NOT NULL
+           ORDER BY m.seq DESC
+           LIMIT 1) AS context_size
   FROM session_v2 s
   WHERE s.parent_id IS NULL
   ORDER BY s.time_updated DESC, s.id DESC
@@ -31,7 +40,8 @@ export function listSessions(dbPath: string): SessionSummary[] {
         timeCreated: Number(row.time_created),
         timeUpdated: Number(row.time_updated),
         timeArchived: row.time_archived === null ? null : Number(row.time_archived),
-        messageCount: Number(row.message_count)
+        messageCount: Number(row.message_count),
+        contextSize: row.context_size === null ? 0 : Number(row.context_size)
       }))
   )
 }

@@ -56,6 +56,24 @@ function messageCountClass(count: number): string {
   return 'font-semibold text-red-700'
 }
 
+// token 数 → 可读文本（如 950 / 9.3k / 99.3k / 1.2M）
+function formatTokens(tokens: number): string {
+  if (tokens < 1000) return `${tokens}`
+  if (tokens < 1_000_000) return `${(tokens / 1000).toFixed(1)}k`
+  return `${(tokens / 1_000_000).toFixed(1)}M`
+}
+
+// 上下文规模 → 颜色深浅（<10k 不变色；10k 以上 amber→orange→red 渐变；>250k 固定最深红）
+function contextSizeClass(tokens: number): string {
+  if (tokens < 10_000) return ''
+  if (tokens <= 30_000) return 'text-amber-500'
+  if (tokens <= 60_000) return 'text-amber-600'
+  if (tokens <= 100_000) return 'text-orange-500'
+  if (tokens <= 150_000) return 'text-orange-600'
+  if (tokens <= 250_000) return 'text-red-500'
+  return 'font-semibold text-red-700'
+}
+
 // 会话活跃判定阈值：5 分钟内有更新视为可能正在进行
 const LIVE_THRESHOLD_MS = 5 * 60 * 1000
 
@@ -294,6 +312,13 @@ export function SessionsPage(): React.JSX.Element {
                     {' · '}
                     <span className={messageCountClass(session.messageCount)}>
                       {session.messageCount} 条消息
+                    </span>
+                    {' · '}
+                    <span
+                      className={contextSizeClass(session.contextSize)}
+                      title="当前上下文规模（最近一轮的输入 token，含缓存读取）"
+                    >
+                      上下文 {formatTokens(session.contextSize)}
                     </span>
                   </p>
                   <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">

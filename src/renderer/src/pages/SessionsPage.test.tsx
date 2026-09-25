@@ -13,7 +13,8 @@ const SESSIONS: SessionSummary[] = [
     timeCreated: 1_700_000_000_000,
     timeUpdated: 1_700_000_600_000,
     timeArchived: null,
-    messageCount: 3
+    messageCount: 3,
+    contextSize: 0
   },
   {
     id: 'beta',
@@ -22,7 +23,8 @@ const SESSIONS: SessionSummary[] = [
     timeCreated: 1_700_001_000_000,
     timeUpdated: 1_700_001_600_000,
     timeArchived: 1_700_001_700_000,
-    messageCount: 7
+    messageCount: 7,
+    contextSize: 99315
   }
 ]
 
@@ -54,6 +56,7 @@ describe('SessionsPage', () => {
     expect(screen.getByText('/tmp/project-a')).toBeInTheDocument()
     expect(screen.getByText('7 条消息')).toBeInTheDocument()
     expect(screen.getByText('已归档')).toBeInTheDocument()
+    expect(screen.getByText('上下文 99.3k')).toBeInTheDocument()
   })
 
   it('filters sessions by title', async () => {
@@ -173,7 +176,8 @@ describe('SessionsPage', () => {
           timeCreated: 1_700_000_000_000,
           timeUpdated: 1_700_000_000_000,
           timeArchived: null,
-          messageCount: 0
+          messageCount: 0,
+          contextSize: 0
         }
       ])
     })
@@ -270,7 +274,8 @@ describe('SessionsPage', () => {
           timeCreated: 1_700_000_000_000,
           timeUpdated: Date.now() - 60_000,
           timeArchived: null,
-          messageCount: 5
+          messageCount: 5,
+          contextSize: 0
         }
       ])
     })
@@ -294,7 +299,8 @@ describe('SessionsPage', () => {
           timeCreated: 1_700_000_000_000,
           timeUpdated: Date.now() - 60_000,
           timeArchived: null,
-          messageCount: 5
+          messageCount: 5,
+          contextSize: 0
         }
       ])
     })
