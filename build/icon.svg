@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#334155"/>
+      <stop offset="1" stop-color="#0b1220"/>
+    </linearGradient>
+    <linearGradient id="gear" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e2e8f0"/>
+      <stop offset="1" stop-color="#94a3b8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="228" fill="url(#bg)"/>
+  <g transform="translate(512 512)">
+    <circle r="300" fill="none" stroke="#475569" stroke-width="24"/>
+    <g fill="url(#gear)">
+      <rect x="-30" y="-372" width="60" height="78" rx="16"/>
+      <rect x="-30" y="294" width="60" height="78" rx="16"/>
+      <rect x="-372" y="-30" width="78" height="60" rx="16"/>
+      <rect x="294" y="-30" width="78" height="60" rx="16"/>
+      <g transform="rotate(45)">
+        <rect x="-26" y="-372" width="52" height="66" rx="14"/>
+        <rect x="-26" y="306" width="52" height="66" rx="14"/>
+        <rect x="-372" y="-26" width="66" height="52" rx="14"/>
+        <rect x="306" y="-26" width="66" height="52" rx="14"/>
+      </g>
+    </g>
+    <circle r="232" fill="#0f172a"/>
+    <circle r="232" fill="none" stroke="#64748b" stroke-width="6" opacity="0.5"/>
+  </g>
+  <text x="512" y="510" text-anchor="middle" dominant-baseline="central" fill="#f8fafc" font-family="-apple-system, Helvetica, Arial, sans-serif" font-size="290" font-weight="800" letter-spacing="-8">OC</text>
+</svg>
